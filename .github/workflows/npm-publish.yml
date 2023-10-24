@@ -16,6 +16,12 @@ jobs:
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org/
+      - name: Update package.json version
+        run: |
+          # Extract version from tag and update package.json
+          VERSION=${GITHUB_REF#refs/tags/}
+          jq ".version=\"$VERSION\"" package.json > package.tmp.json
+          mv package.tmp.json package.json
       - run: yarn install --frozen-lockfile
       - run: yarn publish --access=public
         env:
