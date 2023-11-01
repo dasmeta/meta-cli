@@ -6,4 +6,5 @@ export interface CloudProvider {
     exec(environment: Client): void;
     getClusterList(region?: string): string;
     updateKubeConfig(name:string, region:string, clientName: string): void;
+    getEnv(): { [key: string]: any };
 }

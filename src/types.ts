@@ -7,3 +7,9 @@ export enum PLATFORM {
     MACOS = 'darwin',
     WINDOWS = 'win32'
 }
+
+export enum GIT_PROVIDER {
+    GITHUB = 'github',
+    GITLAB = 'gitlab',
+    BITBUCKET = 'bitbucket'
+}

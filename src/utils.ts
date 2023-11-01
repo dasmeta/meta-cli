@@ -1,6 +1,7 @@
 import * as os from 'os';
 import * as fs from 'fs';
-import { PROVIDER } from './types';
+import { parse } from 'yaml';
+import { PROVIDER, GIT_PROVIDER } from './types';
 import AWSProvider from './AWSProvider';
 import { CloudProvider } from './CloudProvider';
 
@@ -16,6 +17,14 @@ export type Client = {
     defaultRegion: string;
     defaultRole: string;
     ssoAlias: string;
+}
+
+export type MetaConfig = {
+    tfCloudOrg: string;
+    tfCloudWorkspace: string;
+    gitProvider: GIT_PROVIDER;
+    gitOrg: string;
+    gitRepo: string;
 }
 
 function setConfig(config: Config) {
@@ -84,6 +93,81 @@ function getCloudProvider(provider: PROVIDER): CloudProvider {
     throw new Error (`Unknown provider: ${provider}`);
 }
 
+function generateMetaCloudConfig(config: MetaConfig) {
+    const metaCloudYaml = `
+terraform_cloud_org: ${config.tfCloudOrg}
+terraform_cloud_workspace: ${config.tfCloudWorkspace}
+
+git_provider: ${config.gitProvider}
+git_org: ${config.tfCloudOrg}
+git_repo: ${config.gitRepo}
+`;
+
+    fs.writeFileSync(`metacloud.yaml`, metaCloudYaml);
+
+    const metaCloudTf = `
+terraform {
+    cloud {
+        organization = "${config.tfCloudOrg}"
+        workspaces { name = "${config.tfCloudWorkspace}" }
+    }
+}
+
+variable "tfc_org" {}
+variable "tfc_workspace" {}
+variable "tfc_token" {}
+variable "git_provider" {}
+variable "git_org" {}
+variable "git_repo" {}
+variable "git_token" {}
+variable "default_region" {}
+variable "access_key_id" {}
+variable "secret_access_key" {}
+
+module "metacloud" {
+  source  = "dasmeta/cloud/tfe"
+  version = "v2.0.2"
+
+  org   = var.tfc_org
+  token = var.tfc_token
+
+  rootdir   = "\${path.module}/_terraform/"
+  targetdir = "\${path.module}/_terraform"
+  yamldir   = "\${path.module}/."
+
+  git_provider = var.git_provider
+  git_org      = var.git_org
+  git_repo     = var.git_repo
+  git_token    = var.git_token
+
+  aws = {
+    access_key_id     = var.access_key_id
+    secret_access_key = var.secret_access_key
+    default_region    = var.default_region
+  }
+}
+`;
+
+    fs.writeFileSync(`_metacloud.tf`, metaCloudTf);
+}
+
+function getMetaCloudConfig(): MetaConfig|false {
+    if(!fs.existsSync('metacloud.yaml')) {
+        return false;
+    }
+
+    const yaml = fs.readFileSync('metacloud.yaml', 'utf-8');
+    const data = parse(yaml);
+
+    return {
+        tfCloudOrg: data['terraform_cloud_org'],
+        tfCloudWorkspace: data['terraform_cloud_workspace'],
+        gitProvider: data['git_provider'],
+        gitOrg: data['git_org'],
+        gitRepo: data['git_repo']
+    }
+}
+
 export {
     setConfig,
     getConfig,
@@ -91,5 +175,7 @@ export {
     getClients,
     setClustersList,
     getClustersList,
-    getCloudProvider
+    getCloudProvider,
+    generateMetaCloudConfig,
+    getMetaCloudConfig
 }

@@ -61,11 +61,21 @@ class AWSProvider implements CloudProvider {
     }
 
     getClusterList(region?: string): string {
-        // const output = execSync(`aws eks list-clusters --query "clusters[]" --output text`).toString().trim();
-        // return output;
-
         const clusters = getClustersList(process.env.META_CLIENT_NAME) as [];
         return clusters.join('\t');
+    }
+
+    getEnv(): {[key: string]: any} {
+        const output = execSync(`unset AWS_VAULT && aws-vault exec ${process.env.META_CLIENT_NAME} -- env | grep AWS`).toString().trim();
+        return output.split('\n').reduce((acc, item) => {
+            const indexOfEquals = item.indexOf('=');
+            if (indexOfEquals !== -1) {
+                const key = item.substring(0, indexOfEquals);
+                const value = item.substring(indexOfEquals + 1);
+                acc[key] = value;
+            }
+            return acc;
+        }, {});
     }
 
     updateKubeConfig(name: string, region: string, clientName: string): void {

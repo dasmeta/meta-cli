@@ -7,11 +7,14 @@
     "@oclif/core": "^3",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^3.8.4",
+    "@types/inquirer": "8",
     "axios": "^1.5.1",
     "chalk": "4",
     "eslint-config-prettier": "^9.0.0",
     "ini": "^4.1.1",
-    "lodash": "^4.17.21"
+    "inquirer": "^8",
+    "lodash": "^4.17.21",
+    "yaml": "^2.3.3"
   },
   "description": "cli tool for managing dasmeta resources",
   "devDependencies": {

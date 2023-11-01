@@ -1,0 +1,7 @@
+
+terraform_cloud_org: sad
+terraform_cloud_workspace: asd
+
+git_provider: github
+git_org: sad
+git_repo: asd
