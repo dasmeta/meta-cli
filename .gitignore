@@ -9,3 +9,6 @@
 /tmp
 node_modules
 oclif.manifest.json
+
+_metacloud.tf
+metacloud.yaml
