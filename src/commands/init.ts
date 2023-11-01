@@ -8,7 +8,7 @@ import { getCloudProvider, generateMetaCloudConfig, getMetaCloudConfig, MetaConf
 import { GIT_PROVIDER, PROVIDER } from '../types';
 
 export default class Init extends Command {
-  static description = 'describe the command here'
+  static description = 'generates metacloud.yaml and _metacloud.tf files and openes new shell with generated environment variables';
 
   static examples = [
     '<%= config.bin %> <%= command.id %>',
