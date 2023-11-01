@@ -1,5 +1,6 @@
 import { Args, Command } from '@oclif/core';
 import { getCloudProvider } from '../utils';
+import { PROVIDER } from '../types';
 
 export default class Cluster extends Command {
   static description = 'describe the command here'
@@ -26,6 +27,6 @@ export default class Cluster extends Command {
   public async run(): Promise<void> {
     const {args} = await this.parse(Cluster);
 
-    getCloudProvider(process.env.META_CLIENT_PROVIDER).updateKubeConfig(args.name, process.env.META_CLIENT_REGION, process.env.META_CLIENT_NAME);
+    getCloudProvider(process.env.META_CLIENT_PROVIDER as PROVIDER).updateKubeConfig(args.name);
   }
 }

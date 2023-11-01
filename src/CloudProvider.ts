@@ -5,6 +5,6 @@ export interface CloudProvider {
     openSSO(environment: Client): void;
     exec(environment: Client): void;
     getClusterList(region?: string): string;
-    updateKubeConfig(name:string, region:string, clientName: string): void;
+    updateKubeConfig(name:string): void;
     getEnv(): { [key: string]: any };
 }

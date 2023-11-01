@@ -78,6 +78,7 @@ export default class ZshCompWithSpaces {
 
           if (cmd) {
             // if it's a command and has dynamic args, redirect to its completion function.
+            // @ts-ignore
             const pureCommand = this.config._commands.get(arg.id);
             if(pureCommand?.autocompleteArgs?.length > 0) {
               caseBlock += `${arg.id})\n  _${this.config.bin}_${arg.id}\n  ;;\n`
@@ -101,6 +102,7 @@ export default class ZshCompWithSpaces {
 
     const genArgsCompBlock = (command: CommandCompletion) => {
 
+      // @ts-ignore
       const cmd = this.config._commands.get(command.id);
 
       if(!cmd?.autocompleteArgs?.length) {

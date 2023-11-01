@@ -61,13 +61,13 @@ class AWSProvider implements CloudProvider {
     }
 
     getClusterList(region?: string): string {
-        const clusters = getClustersList(process.env.META_CLIENT_NAME) as [];
+        const clusters = getClustersList(process.env.META_CLIENT_NAME as string) as [];
         return clusters.join('\t');
     }
 
     getEnv(): {[key: string]: any} {
         const output = execSync(`unset AWS_VAULT && aws-vault exec ${process.env.META_CLIENT_NAME} -- env | grep AWS`).toString().trim();
-        return output.split('\n').reduce((acc, item) => {
+        return output.split('\n').reduce((acc: any, item) => {
             const indexOfEquals = item.indexOf('=');
             if (indexOfEquals !== -1) {
                 const key = item.substring(0, indexOfEquals);
@@ -78,13 +78,13 @@ class AWSProvider implements CloudProvider {
         }, {});
     }
 
-    updateKubeConfig(name: string, region: string, clientName: string): void {
-        execSync(`aws eks update-kubeconfig --region ${region} --name ${name} --kubeconfig=${os.homedir}/.kube/${clientName}-${name}`, { stdio: 'inherit' });
+    updateKubeConfig(name: string): void {
+        execSync(`aws eks update-kubeconfig --region ${process.env.META_CLIENT_REGION} --name ${name} --kubeconfig=${os.homedir}/.kube/${process.env.META_CLIENT_NAME}-${name}`, { stdio: 'inherit' });
    
-        let shell = spawn(process.env.SHELL, [], {
+        let shell = spawn(process.env.SHELL as string, [], {
             env: {
                 ...process.env,
-                KUBECONFIG: `${os.homedir}/.kube/${clientName}-${name}`
+                KUBECONFIG: `${os.homedir}/.kube/${process.env.META_CLIENT_NAME}-${name}`
             },
             stdio: 'inherit'
           });
