@@ -6,6 +6,7 @@ import * as inquirer from 'inquirer';
 
 import { getCloudProvider, generateMetaCloudConfig, getMetaCloudConfig, MetaConfig } from '../utils';
 import { GIT_PROVIDER, PROVIDER } from '../types';
+import OPClient from '../OPClient';
 
 export default class Init extends Command {
   static description = 'generates metacloud.yaml and _metacloud.tf files and openes new shell with generated environment variables';
@@ -62,15 +63,15 @@ export default class Init extends Command {
     }
 
     const env = getCloudProvider(PROVIDER.AWS).getEnv();
-    const tfToken = '';
+    const { tfToken, gitToken } = await new OPClient().getVariables();
 
-      generateMetaCloudConfig({
-        tfCloudOrg,
-        tfCloudWorkspace,
-        gitProvider,
-        gitOrg,
-        gitRepo
-      });
+    generateMetaCloudConfig({
+      tfCloudOrg,
+      tfCloudWorkspace,
+      gitProvider,
+      gitOrg,
+      gitRepo
+    });
 
     let shell = spawn(process.env.SHELL as string, {
       env: {
@@ -81,7 +82,7 @@ export default class Init extends Command {
           TF_TOKEN_app_terraform_io: tfToken,
           TF_VAR_tfc_token: tfToken,
           TF_VAR_token: tfToken,
-          TF_VAR_git_token: '',
+          TF_VAR_git_token: gitToken,
           TF_VAR_access_key_id: env.AWS_ACCESS_KEY_ID,
           TF_VAR_secret_access_key: env.AWS_SECRET_ACCESS_KEY,
           TF_VAR_default_region: env.AWS_REGION,
