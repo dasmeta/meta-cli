@@ -55,7 +55,7 @@ function setClients(clients: Client[]) {
     }
 
     fs.writeFileSync(`${metaDir}/clients.json`, JSON.stringify(clients));
-} 
+}
 
 function getClients(): Client[]|boolean {
     if(!fs.existsSync(`${os.homedir}/.meta/clients.json`)) {
@@ -94,19 +94,23 @@ function getCloudProvider(provider: PROVIDER): CloudProvider {
 }
 
 function generateMetaCloudConfig(config: MetaConfig) {
-    const metaCloudYaml = `
-terraform_cloud_org: ${config.tfCloudOrg}
+    const metaCloudYaml = `terraform_cloud_org: ${config.tfCloudOrg}
 terraform_cloud_workspace: ${config.tfCloudWorkspace}
 
 git_provider: ${config.gitProvider}
 git_org: ${config.tfCloudOrg}
 git_repo: ${config.gitRepo}
+
+auto_apply:
+yaml_dir:
+result_dir:
+
+handler_version: v2.4.0
 `;
 
     fs.writeFileSync(`metacloud.yaml`, metaCloudYaml);
 
-    const metaCloudTf = `
-terraform {
+    const metaCloudTf = `terraform {
     cloud {
         organization = "${config.tfCloudOrg}"
         workspaces { name = "${config.tfCloudWorkspace}" }
@@ -121,18 +125,21 @@ variable "git_org" {}
 variable "git_repo" {}
 variable "git_token" {}
 variable "default_region" {}
+variable "region" {}
 variable "access_key_id" {}
 variable "secret_access_key" {}
+variable "session_token" {}
+variable "security_token" {}
 
 module "metacloud" {
   source  = "dasmeta/cloud/tfe"
-  version = "v2.0.2"
+  version = "~> v2.0.2"
 
   org   = var.tfc_org
   token = var.tfc_token
 
-  rootdir   = "\${path.module}/_terraform/"
-  targetdir = "\${path.module}/_terraform"
+  rootdir   = "\${path.module}/_terraform/" # should be default value
+  targetdir = "\${path.module}/_terraform" # should be default value
   yamldir   = "\${path.module}/."
 
   git_provider = var.git_provider
@@ -143,6 +150,9 @@ module "metacloud" {
   aws = {
     access_key_id     = var.access_key_id
     secret_access_key = var.secret_access_key
+    session_token     = var.session_token
+    security_token    = var.security_token
+    region            = var.region
     default_region    = var.default_region
   }
 }
