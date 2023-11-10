@@ -1,5 +1,5 @@
-import {Args, Command, Flags, ux} from '@oclif/core';
-import * as chalk from 'chalk';
+import {Command, ux} from '@oclif/core';
+import chalk from 'chalk';
 import { lowerCase } from 'lodash';
 import BackendClient from '../BackendClient';
 import { setClients, getCloudProvider } from '../utils';

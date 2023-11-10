@@ -1,7 +1,6 @@
 import { Args, Command } from '@oclif/core';
-import * as chalk from 'chalk';
-import { execSync, spawn } from 'child_process';
-import { Client, getClients, getCloudProvider, setClustersList } from '../utils';
+import chalk from 'chalk';
+import { Client, getClients, getCloudProvider } from '../utils';
 
 export default class Exec extends Command {
   static description = 'describe the command here'

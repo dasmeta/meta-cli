@@ -1,6 +1,6 @@
-import * as util from 'util'
+import util from 'util'
 import {Config, Interfaces, Command} from '@oclif/core'
-import * as ejs from 'ejs'
+import ejs from 'ejs'
 
 const argTemplate = '        "%s")\n          %s\n        ;;\n'
 

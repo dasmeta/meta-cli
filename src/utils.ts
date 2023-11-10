@@ -1,5 +1,5 @@
-import * as os from 'os';
-import * as fs from 'fs';
+import os from 'os';
+import fs from 'fs';
 import { parse } from 'yaml';
 import { PROVIDER, GIT_PROVIDER } from './types';
 import AWSProvider from './AWSProvider';

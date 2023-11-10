@@ -1,8 +1,8 @@
 import {Command, Flags, ux} from '@oclif/core';
 import { spawn } from 'child_process';
-import * as fs from 'fs';
-import * as chalk from 'chalk';
-import * as inquirer from 'inquirer';
+import fs from 'fs';
+import chalk from 'chalk';
+import inquirer from 'inquirer';
 
 import { getCloudProvider, generateMetaCloudConfig, getMetaCloudConfig, MetaConfig, generateMetaCloudTF } from '../utils';
 import { GIT_PROVIDER, PROVIDER } from '../types';

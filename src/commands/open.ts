@@ -1,5 +1,5 @@
 import {Args, Command} from '@oclif/core'
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { Client, getClients, getCloudProvider } from '../utils';
 
 export default class Open extends Command {

@@ -1,6 +1,6 @@
 import {Args, ux, Flags} from '@oclif/core'
 import {EOL} from 'os'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 import {AutocompleteBase} from '../../autocomplete/base'
 

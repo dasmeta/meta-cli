@@ -1,5 +1,5 @@
 import {Args} from '@oclif/core'
-import * as path from 'path'
+import path from 'path'
 
 import {AutocompleteBase} from '../../autocomplete/base'
 

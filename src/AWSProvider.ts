@@ -1,6 +1,6 @@
-import * as ini from 'ini';
-import * as os from 'os';
-import * as fs from 'fs';
+import ini from 'ini';
+import os from 'os';
+import fs from 'fs';
 import { execSync, spawn } from 'child_process';
 import { uniqBy } from 'lodash';
 import { 
@@ -17,7 +17,7 @@ import {
     ListBucketsCommand
 } from '@aws-sdk/client-s3'
 
-import * as k8s from '@kubernetes/client-node';
+import k8s from '@kubernetes/client-node';
 import { BucketData, CloudProvider, ClusterData, DbData } from './CloudProvider';
 import { Client, getClients, setClustersList, getClustersList } from './utils';
 import { DB_ENGINE, PLATFORM, PROVIDER } from './types';

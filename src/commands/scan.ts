@@ -1,5 +1,5 @@
 import {Command} from '@oclif/core';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import BackendClient from '../BackendClient';
 import { getCloudProvider } from '../utils';
 import { DB_ENGINE, PROVIDER, UNKNOWN_MODULE } from '../types';
