@@ -1,4 +1,4 @@
-import * as path from 'path'
+import path from 'path'
 import {mkdir, writeFile} from 'fs/promises'
 import bashAutocomplete from '../../autocomplete/bash'
 import ZshCompWithSpaces from '../../autocomplete/zsh'

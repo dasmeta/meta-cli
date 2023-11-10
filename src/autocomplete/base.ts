@@ -1,6 +1,6 @@
 import {Command, Config} from '@oclif/core'
 import {openSync, writeSync, mkdirSync} from 'fs'
-import * as path from 'path'
+import path from 'path'
 
 export abstract class AutocompleteBase extends Command {
   public get cliBin() {

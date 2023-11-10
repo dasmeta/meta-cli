@@ -1,7 +1,7 @@
 import {Command, ux} from '@oclif/core'
-import * as os from 'os';
-import * as fs from 'fs';
-import * as chalk from 'chalk';
+import os from 'os';
+import fs from 'fs';
+import chalk from 'chalk';
 import { setConfig } from '../utils';
 
 export default class Configure extends Command {

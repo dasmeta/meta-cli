@@ -1,7 +1,7 @@
-import * as util from 'util'
+import util from 'util'
 import {EOL} from 'os'
 import {Config, Interfaces, Command} from '@oclif/core'
-import * as ejs from 'ejs'
+import ejs from 'ejs'
 
 type CommandCompletion = {
   id: string;
