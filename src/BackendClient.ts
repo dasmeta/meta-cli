@@ -34,8 +34,8 @@ class BackendClient {
         return this.client.put(`/api/${path}`, payload);
     }
 
-    delete(path: string) {
-        return this.client.delete(`/api/${path}`);
+    delete(path: string, id: string) {
+        return this.client.delete(`/api/${path}/${id}`);
     }
 }
 
