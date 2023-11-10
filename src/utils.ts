@@ -22,9 +22,14 @@ export type Client = {
 export type MetaConfig = {
     tfCloudOrg: string;
     tfCloudWorkspace: string;
+    tfAutoApply?: boolean;
+    handlerVersion?: string;
     gitProvider: GIT_PROVIDER;
     gitOrg: string;
     gitRepo: string;
+    rootDir?: string;
+    targetDir?: string;
+    yamlDir?: string;
 }
 
 function setConfig(config: Config) {
@@ -55,7 +60,7 @@ function setClients(clients: Client[]) {
     }
 
     fs.writeFileSync(`${metaDir}/clients.json`, JSON.stringify(clients));
-} 
+}
 
 function getClients(): Client[]|boolean {
     if(!fs.existsSync(`${os.homedir}/.meta/clients.json`)) {
@@ -94,19 +99,19 @@ function getCloudProvider(provider: PROVIDER): CloudProvider {
 }
 
 function generateMetaCloudConfig(config: MetaConfig) {
-    const metaCloudYaml = `
-terraform_cloud_org: ${config.tfCloudOrg}
+    const metaCloudYaml = `terraform_cloud_org: ${config.tfCloudOrg}
 terraform_cloud_workspace: ${config.tfCloudWorkspace}
 
 git_provider: ${config.gitProvider}
 git_org: ${config.tfCloudOrg}
-git_repo: ${config.gitRepo}
-`;
+git_repo: ${config.gitRepo}`;
 
     fs.writeFileSync(`metacloud.yaml`, metaCloudYaml);
+}
 
-    const metaCloudTf = `
-terraform {
+function generateMetaCloudTF(config: MetaConfig) {
+
+    const metaCloudTf = `terraform {
     cloud {
         organization = "${config.tfCloudOrg}"
         workspaces { name = "${config.tfCloudWorkspace}" }
@@ -121,34 +126,41 @@ variable "git_org" {}
 variable "git_repo" {}
 variable "git_token" {}
 variable "default_region" {}
+variable "region" {}
 variable "access_key_id" {}
 variable "secret_access_key" {}
+variable "session_token" {}
+variable "security_token" {}
 
 module "metacloud" {
   source  = "dasmeta/cloud/tfe"
-  version = "v2.0.2"
+  version = "${config.handlerVersion || "~> v2.5.0"}"
 
   org   = var.tfc_org
   token = var.tfc_token
 
-  rootdir   = "\${path.module}/_terraform/"
-  targetdir = "\${path.module}/_terraform"
-  yamldir   = "\${path.module}/."
+  rootdir   = "\${path.module}/${config.rootDir || "_terraform/"}" # should be default value
+  targetdir = "\${path.module}/${config.targetDir || "_terraform"}" # should be default value
+  yamldir   = "\${path.module}/${config.yamlDir || "."}"
 
   git_provider = var.git_provider
   git_org      = var.git_org
   git_repo     = var.git_repo
   git_token    = var.git_token
 
+  auto_apply   = ${typeof config.tfAutoApply !== 'undefined' ? config.tfAutoApply : true}
+
   aws = {
     access_key_id     = var.access_key_id
     secret_access_key = var.secret_access_key
+    session_token     = var.session_token
+    security_token    = var.security_token
+    region            = var.region
     default_region    = var.default_region
   }
-}
-`;
-
-    fs.writeFileSync(`_metacloud.tf`, metaCloudTf);
+}`;
+    
+  fs.writeFileSync(`_metacloud.tf`, metaCloudTf);
 }
 
 function getMetaCloudConfig(): MetaConfig|false {
@@ -164,7 +176,12 @@ function getMetaCloudConfig(): MetaConfig|false {
         tfCloudWorkspace: data['terraform_cloud_workspace'],
         gitProvider: data['git_provider'],
         gitOrg: data['git_org'],
-        gitRepo: data['git_repo']
+        gitRepo: data['git_repo'],
+        tfAutoApply: data['auto_apply'],
+        yamlDir: data['yaml_dir'],
+        rootDir: data['root_dir'],
+        targetDir: data['target_dir'],
+        handlerVersion: data['handler_version']
     }
 }
 
@@ -177,5 +194,6 @@ export {
     getClustersList,
     getCloudProvider,
     generateMetaCloudConfig,
+    generateMetaCloudTF,
     getMetaCloudConfig
 }

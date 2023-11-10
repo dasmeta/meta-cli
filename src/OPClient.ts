@@ -34,8 +34,8 @@ class OPClient {
         const sessionTokenLine = signinOutput.trim().split('\n')[0].match(/"(.+?)"/); 
         const sessionToken = sessionTokenLine ? sessionTokenLine[1] : '';
 
-        const tfToken = execSync(`op item get ${this.vault}.TFC_TOKEN --session=${sessionToken} --vault ${this.vault} --format json | jq ".fields[0].value"`).toString().replace(/\"/g, "")
-        const gitToken = execSync(`op item get ${this.vault}.GIT_TOKEN --session=${sessionToken} --vault ${this.vault} --format json | jq ".fields[0].value"`).toString().replace(/\"/g, "")
+        const tfToken = execSync(`op item get ${this.vault}.TFC_TOKEN --session=${sessionToken} --vault ${this.vault} --format json | jq ".fields[0].value"`).toString().replace(/\"/g, "").trim();
+        const gitToken = execSync(`op item get ${this.vault}.GIT_TOKEN --session=${sessionToken} --vault ${this.vault} --format json | jq ".fields[0].value"`).toString().replace(/\"/g, "").trim();
         return {
           tfToken,
           gitToken

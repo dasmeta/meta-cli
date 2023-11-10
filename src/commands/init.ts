@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as chalk from 'chalk';
 import * as inquirer from 'inquirer';
 
-import { getCloudProvider, generateMetaCloudConfig, getMetaCloudConfig, MetaConfig } from '../utils';
+import { getCloudProvider, generateMetaCloudConfig, getMetaCloudConfig, MetaConfig, generateMetaCloudTF } from '../utils';
 import { GIT_PROVIDER, PROVIDER } from '../types';
 import OPClient from '../OPClient';
 
@@ -31,6 +31,11 @@ export default class Init extends Command {
     let gitProvider = GIT_PROVIDER.GITHUB;
     let gitOrg = '';
     let gitRepo = '';
+    let tfAutoApply;
+    let yamlDir;
+    let rootDir;
+    let targetDir;
+    let handlerVersion;
 
     if(!process.env.META_CLIENT_NAME) {
       this.log(chalk.red(`No active client found. Please run "${this.config.bin} exec" first`));
@@ -47,10 +52,15 @@ export default class Init extends Command {
       gitProvider = yamlConfig.gitProvider;
       gitOrg = yamlConfig.gitOrg;
       gitRepo = yamlConfig.gitRepo;
+      tfAutoApply = yamlConfig.tfAutoApply;
+      yamlDir = yamlConfig.yamlDir;
+      rootDir = yamlConfig.rootDir;
+      targetDir = yamlConfig.targetDir;
+      handlerVersion = yamlConfig.handlerVersion;
       
     } else {
       tfCloudOrg = await ux.prompt('Terraform cloud organisation');
-      tfCloudWorkspace = await ux.prompt('Terraform cloud workspace', { default: `${tfCloudOrg}-infrastructure` });
+      tfCloudWorkspace = await ux.prompt('Terraform cloud workspace', { default: `infrastructure` });
       const provider = await inquirer.prompt([{
           name: 'provider',
           message: 'Git Provider',
@@ -60,18 +70,31 @@ export default class Init extends Command {
       gitProvider = provider['provider'];
       gitOrg = await ux.prompt('Git organisation');
       gitRepo = await ux.prompt('Git repository', { default: 'infrastructure' });
+
+      generateMetaCloudConfig({
+        tfCloudOrg,
+        tfCloudWorkspace,
+        gitProvider,
+        gitOrg,
+        gitRepo
+      });
     }
 
     const env = getCloudProvider(PROVIDER.AWS).getEnv();
     const { tfToken, gitToken } = await new OPClient().getVariables();
 
-    generateMetaCloudConfig({
+    generateMetaCloudTF({
       tfCloudOrg,
       tfCloudWorkspace,
       gitProvider,
       gitOrg,
-      gitRepo
-    });
+      gitRepo,
+      tfAutoApply,
+      yamlDir,
+      rootDir,
+      targetDir,
+      handlerVersion
+    })
 
     let shell = spawn(process.env.SHELL as string, {
       env: {
