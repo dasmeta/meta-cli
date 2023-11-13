@@ -111,7 +111,7 @@ export default class Init extends Command {
           TF_VAR_default_region: env.AWS_REGION,
           TF_VAR_region: env.AWS_REGION,
           TF_VAR_session_token: env.AWS_SESSION_TOKEN,
-          TF_VAR_security_token: env.AWS_SECURITY_TOKEN,
+          TF_VAR_security_token: env.AWS_SESSION_TOKEN,
           TF_VAR_tfc_org: tfCloudOrg,
           TF_VAR_tfc_workspace: tfCloudWorkspace,
           TF_VAR_git_provider: gitProvider,
