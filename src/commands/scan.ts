@@ -1,13 +1,8 @@
 import {Command} from '@oclif/core';
 import chalk from 'chalk';
 import BackendClient from '../BackendClient';
-import { getCloudProvider } from '../utils';
-import { DB_ENGINE, PROVIDER, UNKNOWN_MODULE } from '../types';
-
-const dbEngineModuleMapping = {
-  [DB_ENGINE.POSTGRES]: UNKNOWN_MODULE.POSTGRES,
-  [DB_ENGINE.MARIADB]: UNKNOWN_MODULE.MARIADB
-}
+import { getProvider } from '../utils';
+import { PROVIDER, UNKNOWN_MODULE } from '../types';
 
 export default class Scan extends Command {
   static description = 'generates metacloud.yaml and _metacloud.tf files and openes new shell with generated environment variables';
@@ -28,9 +23,7 @@ export default class Scan extends Command {
       return;
     }
 
-    const clusterData = await getCloudProvider(PROVIDER.AWS).scanClusters();
-    const dbData = await getCloudProvider(PROVIDER.AWS).scanDatabases();
-    const bucketData = await getCloudProvider(PROVIDER.AWS).scanBuckets();
+    const scannedComponents = await getProvider(process.env.META_CLIENT_PROVIDER as PROVIDER).scan();
 
     const client = new BackendClient();
 
@@ -47,6 +40,8 @@ export default class Scan extends Command {
     const accountId = account.id;
     const clientId = account.attributes.client.data.id;
     const cloudId = account.attributes.cloud.data.id;
+    const clientName = account.attributes.client.data.attributes.name;
+    const defaultProjectName = `${clientName} // Project created by scan`;
 
     const { data: projectsData } = await client.get('projects', {
       filters: {
@@ -56,7 +51,7 @@ export default class Scan extends Command {
           }
         },
         name: {
-          $eq: 'Project created by scan'
+          $eq: defaultProjectName
         }
       },
       populate: '*' 
@@ -67,7 +62,7 @@ export default class Scan extends Command {
     if(!projectsData.data.length) {
       const { data: createdData } = await client.post('projects', {
         data: {
-          name: 'Project created by scan',
+          name: defaultProjectName,
           client: clientId
         }
       });
@@ -79,11 +74,15 @@ export default class Scan extends Command {
 
     const { data: componentsData } = await client.get('components', {
       filters: {
-        project: {
+        account: {
           id: {
-            $eq: projectId
+            $eq: accountId
           }
         },
+      },
+      pagination: {
+        page: 1,
+        pageSize: 1000
       },
       populate: '*' 
     });
@@ -104,17 +103,17 @@ export default class Scan extends Command {
 
     // create kubernetes services
     let iterator = 0;
-    for(const service of clusterData.services) {
-      if(!existingServices[service.identifier]) {
+    for(const component of scannedComponents) {
+      if(!existingServices[component.identifier]) {
 
         await client.post('components', {
           data: {
-            name: service.name,
+            name: component.name,
             project: projectId,
-            identifier: service.identifier,
+            identifier: component.identifier,
             cloud: cloudId,
             account: accountId,
-            module: UNKNOWN_MODULE.APPLICATION,
+            module: component.type,
             viewDetails: {
               ...viewData,
               position: {
@@ -126,59 +125,7 @@ export default class Scan extends Command {
         });
         iterator++
       }
-      delete existingServices[service.identifier];
-    }
-
-    // create buckets
-    iterator = 0;
-    for(const bucket of bucketData) {
-      if(!existingServices[bucket.name]) {
-        await client.post('components', {
-          data: {
-            name: bucket.name,
-            project: projectId,
-            identifier: bucket.name,
-            cloud: cloudId,
-            account: accountId,
-            module: UNKNOWN_MODULE.S3,
-            viewDetails: {
-              ...viewData,
-              position: {
-                x: 450,
-                y: iterator * 200
-              }
-            }
-          }
-        });
-        iterator++;
-      }
-      delete existingServices[bucket.name];
-    }
-
-    // create databases
-    iterator = 0;
-    for(const instance of dbData) {
-      if(!existingServices[instance.identifier]) {
-        await client.post('components', {
-          data: {
-            name: instance.name,
-            project: projectId,
-            identifier: instance.identifier,
-            account: accountId,
-            cloud: cloudId,
-            module: dbEngineModuleMapping[instance.engine],
-            viewDetails: {
-              ...viewData,
-              position: {
-                x: 900,
-                y: iterator * 200
-              }
-            }
-          }
-        });
-        iterator++;
-      }
-      delete existingServices[instance.identifier];
+      delete existingServices[component.identifier];
     }
 
     for(const key in existingServices) {

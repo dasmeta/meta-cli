@@ -1,9 +1,10 @@
 import os from 'os';
 import fs from 'fs';
 import { parse } from 'yaml';
-import { PROVIDER, GIT_PROVIDER } from './types';
+import { Provider } from './Provider';
+import { PROVIDER, GIT_PROVIDER, Account } from './types';
 import AWSProvider from './AWSProvider';
-import { CloudProvider } from './CloudProvider';
+import KubernetesProvider from './KubernetesProvider';
 
 export type Config = {
     apiKey: string;
@@ -51,48 +52,40 @@ function getConfig(): Config|boolean {
     return JSON.parse(data) as Config;
 }
 
-function setClients(clients: Client[]) {
-
+function setAccounts(accounts: Account[]) {
     const metaDir = `${os.homedir()}/.meta`;
 
     if(!fs.existsSync(metaDir)) {
       fs.mkdirSync(metaDir)
     }
 
-    fs.writeFileSync(`${metaDir}/clients.json`, JSON.stringify(clients));
+    fs.writeFileSync(`${metaDir}/accounts.json`, JSON.stringify(accounts));
 }
 
-function getClients(): Client[]|boolean {
-    if(!fs.existsSync(`${os.homedir}/.meta/clients.json`)) {
+function getAccounts(): Account[]|boolean {
+    if(!fs.existsSync(`${os.homedir}/.meta/accounts.json`)) {
         return false;
     }
 
-    const data = fs.readFileSync(`${os.homedir}/.meta/clients.json`, 'utf8');
-    return JSON.parse(data) as Client[];
+    const data = fs.readFileSync(`${os.homedir}/.meta/accounts.json`, 'utf8');
+    return JSON.parse(data) as Account[];
 }
 
-function setClustersList(name: string, clusters: string[]) {
-    const metaDir = `${os.homedir()}/.meta`;
-
-    if(!fs.existsSync(metaDir)) {
-      fs.mkdirSync(metaDir)
-    }
-
-    fs.writeFileSync(`${metaDir}/${name}-clusters.json`, JSON.stringify(clusters));
-}
-
-function getClustersList(name: string): string[]|boolean {
-    if(!fs.existsSync(`${os.homedir}/.meta/${name}-clusters.json`)) {
+function getAccount(accountId: string): Account | false {
+    const accounts = getAccounts() as Account[];
+    const account = accounts.find(item => item.accountId === accountId);
+    if(!account) {
         return false;
     }
-
-    const data = fs.readFileSync(`${os.homedir}/.meta/${name}-clusters.json`, 'utf8');
-    return JSON.parse(data);
+    return account;
 }
 
-function getCloudProvider(provider: PROVIDER): CloudProvider {
+function getProvider(provider: PROVIDER): Provider {
     if(provider === PROVIDER.AWS) {
         return new AWSProvider();
+    }
+    if(provider === PROVIDER.KUBERNETES) {
+        return new KubernetesProvider();
     }
 
     throw new Error (`Unknown provider: ${provider}`);
@@ -188,11 +181,10 @@ function getMetaCloudConfig(): MetaConfig|false {
 export {
     setConfig,
     getConfig,
-    setClients,
-    getClients,
-    setClustersList,
-    getClustersList,
-    getCloudProvider,
+    setAccounts,
+    getAccounts,
+    getAccount,
+    getProvider,
     generateMetaCloudConfig,
     generateMetaCloudTF,
     getMetaCloudConfig

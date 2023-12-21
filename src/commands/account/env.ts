@@ -1,6 +1,7 @@
 import {Args, Command} from '@oclif/core'
 import { uniq } from 'lodash';
-import { Client, getClients } from '../../utils';
+import { getAccounts } from '../../utils';
+import { Account } from '../../types';
 
 export default class Env extends Command {
 
@@ -21,11 +22,11 @@ export default class Env extends Command {
   async run(): Promise<void> {
     const {args} = await this.parse(Env)
 
-    const clients = getClients() as Client[];
+    const accounts = getAccounts() as Account[];
 
     if(args.client) {
-      const clientsFound = clients.filter(item => item.name === args.client);
-      this.log(uniq(clientsFound.map(item => item.alias)).join('\n'));
+      const accountsFound = accounts.filter(item => item.name === args.client);
+      this.log(uniq(accountsFound.map(item => item.alias)).join('\n'));
     }
   }
 }

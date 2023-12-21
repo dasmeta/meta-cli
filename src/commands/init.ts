@@ -4,7 +4,7 @@ import fs from 'fs';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 
-import { getCloudProvider, generateMetaCloudConfig, getMetaCloudConfig, MetaConfig, generateMetaCloudTF } from '../utils';
+import { getProvider, generateMetaCloudConfig, getMetaCloudConfig, MetaConfig, generateMetaCloudTF } from '../utils';
 import { GIT_PROVIDER, PROVIDER } from '../types';
 import OPClient from '../OPClient';
 
@@ -80,7 +80,7 @@ export default class Init extends Command {
       });
     }
 
-    const env = getCloudProvider(PROVIDER.AWS).getEnv();
+    const env = getProvider(PROVIDER.AWS).getEnv();
     const { tfToken, gitToken } = await new OPClient().getVariables();
 
     generateMetaCloudTF({

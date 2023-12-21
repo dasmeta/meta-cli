@@ -1,6 +1,7 @@
 import { Command } from '@oclif/core'
 import { uniq } from 'lodash';
-import { Client, getClients } from '../../utils';
+import { getAccounts } from '../../utils';
+import { Account } from '../../types';
 
 export default class List extends Command {
 
@@ -13,12 +14,12 @@ export default class List extends Command {
   static examples = []
 
   async run(): Promise<void> {
-    const clients = getClients() as Client[];
+    const accounts = getAccounts() as Account[];
+    
+    const uniqueAccounts = uniq(accounts.map(item => item.name));
 
-    const uniqueClients = uniq(clients.map(item => item.name));
-
-    uniqueClients.forEach(item => {
+    uniqueAccounts.forEach(item => {
       this.log(`${item}`)
-    })
+    });
   }
 }

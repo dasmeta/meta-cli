@@ -1,6 +1,7 @@
 import {Args, Command} from '@oclif/core'
 import chalk from 'chalk';
-import { Client, getClients, getCloudProvider } from '../utils';
+import { getAccounts, getProvider } from '../utils';
+import { Account } from '../types';
 
 export default class Open extends Command {
   static description = 'describe the command here'
@@ -14,8 +15,8 @@ export default class Open extends Command {
   static strict = false;
 
   static args = {
-    client: Args.string({
-      description: 'client name to connect',
+    account: Args.string({
+      description: 'account name to connect',
       required: true,
     }),
     env: Args.string({
@@ -25,30 +26,30 @@ export default class Open extends Command {
   }
 
   static autocompleteArgs = [
-    { arg: 'client', cmd: 'meta client list' },
-    { arg: 'env', cmd: 'meta client env' }
+    { arg: 'account', cmd: 'meta account list' },
+    { arg: 'env', cmd: 'meta account env' }
   ];
 
   public async run(): Promise<void> {
     const {args} = await this.parse(Open)
 
-    const clients = getClients() as Client[];
+    const accounts = getAccounts() as Account[];
 
-    if(args.client) {
-      const clientsFound = clients.filter(item => item.name === args.client);
-      if(!clientsFound.length) {
+    if(args.account) {
+      const accountsFound = accounts.filter(item => item.name === args.account);
+      if(!accountsFound.length) {
         this.log(chalk.red('Wrong client \n'));
         return;
       }
 
       if(args.env) {
-        const environmentFound = clientsFound.find(item => `${item.name}-${item.alias}` === `${args.client}-${args.env}`);
+        const environmentFound = accountsFound.find(item => `${item.name}-${item.alias}` === `${args.account}-${args.env}`);
         if(!environmentFound) {
           this.log(chalk.red('Wrong environment \n'));
           return;
         }
 
-        getCloudProvider(environmentFound.cloud).openSSO(environmentFound);
+        getProvider(environmentFound.provider).open(environmentFound);
       }
     }
   }
