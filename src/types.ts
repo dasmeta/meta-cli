@@ -46,6 +46,7 @@ export type AwsConfig = {
     defaultRegion: string;
     defaultRole: string;
     ssoAlias: string;
+    region?: string;
 }
 
 export type KubernetesConfig = {

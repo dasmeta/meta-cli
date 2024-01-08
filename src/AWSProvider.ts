@@ -71,7 +71,7 @@ class AWSProvider implements Provider {
             'sso_region': account.defaultRegion,
             'sso_account_id': account.accountId,
             'sso_role_name': account.defaultRole,
-            'region': account.defaultRegion
+            'region': account.region || account.defaultRegion
         }
 
         fs.writeFileSync(`${os.homedir}/.aws/config`, ini.stringify(config))
@@ -94,7 +94,7 @@ class AWSProvider implements Provider {
         const clusters = clustersOutput.split('\t').filter(Boolean);
 
         for(const cluster of clusters) {
-            execSync(`${vaultCommandPrefix} aws eks update-kubeconfig --region ${account.defaultRegion} --name ${cluster} --kubeconfig=${os.homedir}/.kube/${account.name}-${account.alias}-${cluster}`, { stdio: 'inherit' });
+            execSync(`${vaultCommandPrefix} aws eks update-kubeconfig --region ${account.region || account.defaultRegion} --name ${cluster} --kubeconfig=${os.homedir}/.kube/${account.name}-${account.alias}-${cluster}`, { stdio: 'inherit' });
         }
 
         const envOutput = execSync(`${vaultCommandPrefix} env | grep AWS`).toString().trim();
