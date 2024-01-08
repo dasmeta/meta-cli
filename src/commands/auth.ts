@@ -25,7 +25,13 @@ export default class Auth extends Command {
 
     if(username === 'user' && password === 'pass') {
       this.log(chalk.green('Authenticated successfully.'));
-      const { data } = await client.get('accounts', { populate: '*' });
+      const { data } = await client.get('accounts', { 
+        populate: '*',
+        pagination: {
+          page: 1,
+          pageSize: 1000
+        },
+      });
 
       const accounts: Account[] = [];
 

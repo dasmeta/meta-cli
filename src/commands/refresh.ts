@@ -20,7 +20,13 @@ export default class Refresh extends Command {
 
     const client = new BackendClient();
 
-    const { data } = await client.get('accounts', { populate: '*' });
+    const { data } = await client.get('accounts', { 
+      populate: '*',
+      pagination: {
+        page: 1,
+        pageSize: 1000
+      }, 
+    });
 
     const accounts: Account[] = [];
 
