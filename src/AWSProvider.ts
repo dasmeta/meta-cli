@@ -91,7 +91,7 @@ class AWSProvider implements Provider {
         const vaultCommandPrefix = `unset AWS_VAULT && aws-vault exec ${account.name}-${account.alias} --`;
 
         const clustersOutput = execSync(`${vaultCommandPrefix} aws eks list-clusters --query "clusters[]" --output text`).toString().trim();
-        const clusters = clustersOutput.split('\t');
+        const clusters = clustersOutput.split('\t').filter(Boolean);
 
         for(const cluster of clusters) {
             execSync(`${vaultCommandPrefix} aws eks update-kubeconfig --region ${account.defaultRegion} --name ${cluster} --kubeconfig=${os.homedir}/.kube/${account.name}-${account.alias}-${cluster}`, { stdio: 'inherit' });
