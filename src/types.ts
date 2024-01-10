@@ -34,6 +34,11 @@ export enum MODULE_TYPE {
     APPLICATION = 3
 }
 
+export enum COMPONENT_SOURCE {
+    SCANNER = 'scanner',
+    MANUAL = 'manual'
+}
+
 export type Account = {
     name: string;
     accountId: string;
@@ -63,30 +68,42 @@ export const PROVIDERMAP: {[key: number]: string} = {
 export type Component = {
     name: string;
     identifier: string;
-    type: UNKNOWN_MODULE
+    type: UNKNOWN_MODULE;
+    moduleName?: string;
+    moduleVersion?: string;
+    rawData: {[key: string]: any};
 }
 
 export type ClusterData = {
     services: Array<{
         name: string;
         identifier: string;
+        rawData: {[key: string]: any};
     }>,
     storages: Array<{
         name: string;
         identifier: string;
+        rawData: {[key: string]: any};
     }>,
     cronjobs: Array<{
         name: string;
         identifier: string;
+        rawData: {[key: string]: any};
     }>
 }
 
-export type BucketData = Array<{
+export type BucketData = {
     name: string;
-}>
+    moduleName?: string;
+    moduleVersion?: string;
+    rawData: {[key: string]: any};
+}
 
-export type DbData = Array<{
+export type DbData = {
     name: string;
     identifier: string;
     engine: DB_ENGINE;
-}>
+    moduleName?: string;
+    moduleVersion?: string;
+    rawData: {[key: string]: any};
+}

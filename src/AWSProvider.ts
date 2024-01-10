@@ -1,24 +1,17 @@
 import ini from 'ini';
 import os from 'os';
 import fs from 'fs';
-import { execSync, spawn } from 'child_process';
-import { uniqBy } from 'lodash';
-import { 
-    DescribeClusterCommand, 
-    EKSClient, 
-    ListClustersCommand, 
-} from '@aws-sdk/client-eks';
+import { execSync } from 'child_process';
 import {
     RDSClient,
     DescribeDBInstancesCommand
 } from '@aws-sdk/client-rds';
 import {
     S3Client,
-    ListBucketsCommand
+    ListBucketsCommand,
+    GetBucketTaggingCommand
 } from '@aws-sdk/client-s3'
 
-import * as k8s from '@kubernetes/client-node';
-import { Client } from './utils';
 import { 
     Account, 
     Component,
@@ -28,11 +21,8 @@ import {
     PROVIDER, 
     UNKNOWN_MODULE, 
     BucketData, 
-    ClusterData, 
     DbData } from './types';
 import { Provider } from './Provider';
-
-// deployment statefulset cronjob (job daemonset) 
 
 const dbEngineModuleMapping = {
     [DB_ENGINE.POSTGRES]: UNKNOWN_MODULE.POSTGRES,
@@ -40,15 +30,6 @@ const dbEngineModuleMapping = {
 }
 
 class AWSProvider implements Provider {
-
-    private excludedKubernetesNamespaces = [
-        'cert-manager',
-        'kube-node-lease',
-        'kube-public',
-        'kube-system',
-        'linkerd',
-        'meta-system',
-    ];
 
     generateConfig(account: Account): void {
 
@@ -132,53 +113,87 @@ class AWSProvider implements Provider {
 
         dbData.forEach(item => {
             data.push({
-                name: item.name,
-                identifier: item.identifier,
+                ...item,
                 type: dbEngineModuleMapping[item.engine]
             })
         });
 
         bucketData.forEach(item => {
             data.push({
-                name: item.name,
+                ...item,
                 identifier: item.name,
-                type: UNKNOWN_MODULE.S3
+                type: UNKNOWN_MODULE.S3,
             })
         });
 
         return data;
     }
 
-    private async scanDatabases(): Promise<DbData> {
+    private async scanDatabases(): Promise<DbData[]> {
         const rdsClient = new RDSClient({});
 
         const dbInstancesCommand = new DescribeDBInstancesCommand({});
         const dbInstances = await rdsClient.send(dbInstancesCommand);
 
-        const dbData: DbData = [];
+        const dbData: DbData[] = [];
 
         for(const instance of dbInstances.DBInstances || []) {
 
-            dbData.push({ 
+            const data: DbData = { 
                 name: instance.DBInstanceIdentifier as string, 
                 identifier: instance.DBInstanceIdentifier as string,
                 engine: instance.Engine as DB_ENGINE,
-            })
+                rawData: instance
+            };
+
+            const moduleName = instance.TagList?.find(item => item.Key === 'TerraformModuleSource');
+            const moduleVersion = instance.TagList?.find(item => item.Key === 'TerraformModuleVersion');
+
+            if(moduleName) {
+                data.moduleName = moduleName.Value;
+            }
+            if(moduleVersion) {
+                data.moduleVersion = moduleVersion.Value;
+            }
+
+            dbData.push(data);
         }
 
         return dbData;
     }
 
-    private async scanBuckets(): Promise<BucketData> {
+    private async scanBuckets(): Promise<BucketData[]> {
         const s3Client = new S3Client({});
 
         const listBucketsCommand = new ListBucketsCommand({});
         const buckets = await s3Client.send(listBucketsCommand);
         
-        const bucketData: BucketData = [];
+        const bucketData: BucketData[] = [];
 
         for(const bucket of buckets.Buckets || []) {
-            bucketData.push({ name: bucket.Name as string });
+
+            const getBucketTaggingCommand = new GetBucketTaggingCommand({ Bucket: bucket.Name });
+            const taglist = await s3Client.send(getBucketTaggingCommand);
+
+            const data: BucketData = { 
+                name: bucket.Name as string,
+                rawData: {
+                    ...bucket,
+                    TagSet: taglist.TagSet
+                }
+            }
+
+            const moduleName = taglist.TagSet?.find(item => item.Key === 'TerraformModuleSource');
+            const moduleVersion = taglist.TagSet?.find(item => item.Key === 'TerraformModuleVersion');
+
+            if(moduleName) {
+                data.moduleName = moduleName.Value;
+            }
+            if(moduleVersion) {
+                data.moduleVersion = moduleVersion.Value;
+            }
+
+            bucketData.push(data);
         }
 
         return bucketData;

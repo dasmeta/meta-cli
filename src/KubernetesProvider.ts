@@ -9,15 +9,6 @@ import { getAccount } from './utils';
 
 class KubernetesProvider implements Provider {
 
-    private excludedKubernetesNamespaces = [
-        'cert-manager',
-        'kube-node-lease',
-        'kube-public',
-        'kube-system',
-        'linkerd',
-        'meta-system',
-    ];
-
     generateConfig(account: Account): void {}
 
     exec(account: Account): Environment {
@@ -69,7 +60,8 @@ class KubernetesProvider implements Provider {
                     if(item.kind === 'CronJob') {
                         jobToCronJobMap[job.metadata?.name || ''] = {
                             name: item.name,
-                            uid: item.uid
+                            uid: item.uid,
+                            rawData: item
                         }; 
                     }
                 })
@@ -85,7 +77,8 @@ class KubernetesProvider implements Provider {
                     if(Object.keys(matchLabels).every((key) => podLabels[key] === matchLabels[key] )) {
                         services.push({
                             name: deployment.metadata?.name,
-                            identifier: deployment.metadata?.uid
+                            identifier: deployment.metadata?.uid,
+                            rawData: deployment
                         })
                     }
                 }
@@ -95,7 +88,8 @@ class KubernetesProvider implements Provider {
                     if(Object.keys(matchLabels).every((key) => podLabels[key] === matchLabels[key] )) {
                         storages.push({
                             name: statefulset.metadata?.name,
-                            identifier: statefulset.metadata?.uid
+                            identifier: statefulset.metadata?.uid,
+                            rawData: statefulset
                         })
                     }
                 }
@@ -104,7 +98,8 @@ class KubernetesProvider implements Provider {
                     if(reference.kind === 'Job' && jobToCronJobMap[reference.name]) {
                         cronjobs.push({
                             name: jobToCronJobMap[reference.name].name,
-                            identifier: jobToCronJobMap[reference.name].uid
+                            identifier: jobToCronJobMap[reference.name].uid,
+                            rawData: jobToCronJobMap[reference.name].rawData
                         })
                     }
                 }

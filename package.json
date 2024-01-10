@@ -24,6 +24,7 @@
     "ini": "^4.1.1",
     "inquirer": "^8",
     "lodash": "^4.17.21",
+    "sift": "^17.0.1",
     "yaml": "^2.3.3"
   },
   "description": "cli tool for managing dasmeta resources",
