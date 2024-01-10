@@ -60,7 +60,7 @@ async function getOrCreateDefaultProject(clientId: number, clientName: string) {
             }
             },
             name: {
-            $eq: defaultProjectName
+                $eq: defaultProjectName
             }
         },
         populate: '*' 

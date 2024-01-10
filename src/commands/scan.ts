@@ -138,10 +138,13 @@ export default class Scan extends Command {
             $eq: accountId
           }
         },
+        archived: {
+          $eq: false
+        }
       },
       pagination: {
         page: 1,
-        pageSize: 1000
+        pageSize: 10000
       },
       populate: '*' 
     });
@@ -216,6 +219,7 @@ export default class Scan extends Command {
             module_version: moduleVersion ? moduleVersion.id : null,
             source: COMPONENT_SOURCE.SCANNER,
             raw_data: component.rawData,
+            archived: false,
             viewDetails: {
               ...viewData,
               position: {
@@ -233,7 +237,8 @@ export default class Scan extends Command {
             module: moduleId,
             module_version: moduleVersion ? moduleVersion.id : null,
             source: COMPONENT_SOURCE.SCANNER,
-            raw_data: component.rawData
+            raw_data: component.rawData,
+            archived: false
           }
         })
       }
