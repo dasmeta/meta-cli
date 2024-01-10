@@ -82,7 +82,7 @@
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",
     "lint": "eslint . --ext .ts",
-    "postinstall": "./bin/run.js autocomplete",
+    "postinstall": "if [ \"$PI\" != \"0\" ]; then ./bin/run.js autocomplete; fi",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "yarn lint",
     "prepack": "yarn build && oclif manifest && oclif readme",
