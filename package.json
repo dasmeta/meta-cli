@@ -9,7 +9,7 @@
     "@aws-sdk/client-ec2": "^3.441.0",
     "@aws-sdk/client-eks": "^3.441.0",
     "@aws-sdk/client-elastic-load-balancing-v2": "^3.441.0",
-    "@aws-sdk/client-iam": "^3.441.0",
+    "@aws-sdk/client-iam": "^3.490.0",
     "@aws-sdk/client-rds": "^3.441.0",
     "@aws-sdk/client-s3": "^3.445.0",
     "@dagrejs/graphlib-dot": "^1.0.2",
