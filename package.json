@@ -16,7 +16,7 @@
     "@kubernetes/client-node": "^0.20.0",
     "@oclif/core": "^3",
     "@oclif/plugin-help": "^6.0.10",
-    "@oclif/plugin-plugins": "^4.1.15",
+    "@oclif/plugin-plugins": "^4.1.18",
     "@types/cli-progress": "^3.11.5",
     "@types/inquirer": "8",
     "axios": "^1.5.1",
