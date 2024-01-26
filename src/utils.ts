@@ -5,6 +5,8 @@ import { Provider } from './Provider';
 import { PROVIDER, GIT_PROVIDER, Account } from './types';
 import AWSProvider from './AWSProvider';
 import KubernetesProvider from './KubernetesProvider';
+import GCPProvider from './GCPProvider';
+import AzureProvider from './AzureProvider';
 
 export type Config = {
     apiKey: string;
@@ -86,6 +88,12 @@ function getProvider(provider: PROVIDER): Provider {
     }
     if(provider === PROVIDER.KUBERNETES) {
         return new KubernetesProvider();
+    }
+    if(provider === PROVIDER.GCP) {
+        return new GCPProvider();
+    }
+    if(provider === PROVIDER.AZURE) {
+        return new AzureProvider();
     }
 
     throw new Error (`Unknown provider: ${provider}`);

@@ -2,15 +2,37 @@ import ini from 'ini';
 import os from 'os';
 import fs from 'fs';
 import { execSync } from 'child_process';
+
 import {
     RDSClient,
     DescribeDBInstancesCommand
 } from '@aws-sdk/client-rds';
+
 import {
     S3Client,
     ListBucketsCommand,
     GetBucketTaggingCommand
-} from '@aws-sdk/client-s3'
+} from '@aws-sdk/client-s3';
+
+import {
+    ListQueuesCommand,
+    SQSClient,
+    GetQueueAttributesCommand,
+    ListQueueTagsCommand,
+} from '@aws-sdk/client-sqs';
+
+import {
+    DescribeElasticsearchDomainCommand,
+    ElasticsearchServiceClient,
+    ListDomainNamesCommand,
+    ListTagsCommand,
+} from '@aws-sdk/client-elasticsearch-service';
+
+import {
+    ElastiCacheClient,
+    DescribeCacheClustersCommand,
+    ListTagsForResourceCommand
+} from '@aws-sdk/client-elasticache';
 
 import { 
     Account, 
@@ -21,12 +43,22 @@ import {
     PROVIDER, 
     UNKNOWN_MODULE, 
     BucketData, 
-    DbData } from './types';
+    QueueData,
+    DbData, 
+    ElasticSearchData,
+    ElastiCacheData,
+    CACHE_ENGINE
+} from './types';
 import { Provider } from './Provider';
 
 const dbEngineModuleMapping = {
     [DB_ENGINE.POSTGRES]: UNKNOWN_MODULE.POSTGRES,
-    [DB_ENGINE.MARIADB]: UNKNOWN_MODULE.MARIADB
+    [DB_ENGINE.MARIADB]: UNKNOWN_MODULE.MARIADB,
+    [DB_ENGINE.MYSQL]: UNKNOWN_MODULE.MYSQL
+}
+
+const cacheEngineModuleMapping = {
+    [CACHE_ENGINE.REDIS]: UNKNOWN_MODULE.REDIS_AWS
 }
 
 class AWSProvider implements Provider {
@@ -110,6 +142,9 @@ class AWSProvider implements Provider {
 
         const dbData = await this.scanDatabases();
         const bucketData = await this.scanBuckets();
+        const queueData = await this.scanQueues();
+        const esData = await this.scanElasticSearch();
+        const ecData = await this.scanElastiCache();
 
         dbData.forEach(item => {
             data.push({
@@ -126,7 +161,32 @@ class AWSProvider implements Provider {
             })
         });
 
+        queueData.forEach(item => {
+            data.push({
+                ...item,
+                type: UNKNOWN_MODULE.SQS
+            })
+        });
+
+        esData.forEach(item => {
+            data.push({
+                ...item,
+                type: UNKNOWN_MODULE.ES_AWS
+            })
+        });
+
+        ecData.forEach(item => {
+            data.push({
+                ...item,
+                type: cacheEngineModuleMapping[item.engine]
+            })
+        });
+
         return data;
+    }
+
+    private getQueueName(arn: string): string {
+        return arn.split(':').pop() || '';
     }
 
     private async scanDatabases(): Promise<DbData[]> {
@@ -197,6 +257,126 @@ class AWSProvider implements Provider {
         }
 
         return bucketData;
+    }
+
+    private async scanQueues(): Promise<QueueData[]> {
+
+        const sqsClient = new SQSClient({});
+
+        const listQueuesCommand = new ListQueuesCommand({});
+        const queues = await sqsClient.send(listQueuesCommand);
+
+        const queueData: QueueData[] = [];
+
+        for(const url of queues.QueueUrls || []) {
+
+            const getQueueAttributesCommand = new GetQueueAttributesCommand({ QueueUrl: url, AttributeNames: ['All'] });
+            const listQueueTagsCommand = new ListQueueTagsCommand({QueueUrl: url});
+
+            const queue = await sqsClient.send(getQueueAttributesCommand);
+            const queueTags = await sqsClient.send(listQueueTagsCommand);
+
+            const moduleName = queueTags?.Tags?.TerraformModuleSource;
+            const moduleVersion = queueTags?.Tags?.TerraformModuleVersion;
+
+
+            const data: QueueData = { 
+                name: this.getQueueName(queue.Attributes?.QueueArn as string),
+                identifier: queue.Attributes?.QueueArn as string,
+                moduleName,
+                moduleVersion,
+                rawData: {
+                    ...queue.Attributes,
+                    Tags: queueTags.Tags
+                }
+            }
+
+            queueData.push(data);
+        }
+
+        return queueData;
+    }
+
+    private async scanElasticSearch(): Promise<ElasticSearchData[]> {
+
+        const esClient = new ElasticsearchServiceClient({});
+
+        const listDomainNamesCommand = new ListDomainNamesCommand({});
+        const esList = await esClient.send(listDomainNamesCommand);
+
+        const esData: ElasticSearchData[] = [];
+
+        for(const domainName of esList.DomainNames || []) {
+
+            const describeElasticSearchDomain = new DescribeElasticsearchDomainCommand({ DomainName: domainName.DomainName });
+            const esItem = await esClient.send(describeElasticSearchDomain);
+
+            const listTagsCommand = new ListTagsCommand({ARN: esItem.DomainStatus?.ARN});
+            const esItemTags = await esClient.send(listTagsCommand);
+
+            const data: ElasticSearchData = { 
+                name: esItem.DomainStatus?.DomainName as string,
+                identifier: esItem.DomainStatus?.DomainId as string,
+                rawData: {
+                    ...esItem.DomainStatus,
+                    TagList: esItemTags.TagList
+                }
+            }
+
+            const moduleName = esItemTags.TagList?.find(item => item.Key === 'TerraformModuleSource');
+            const moduleVersion = esItemTags.TagList?.find(item => item.Key === 'TerraformModuleVersion');
+
+            if(moduleName) {
+                data.moduleName = moduleName.Value;
+            }
+            if(moduleVersion) {
+                data.moduleVersion = moduleVersion.Value;
+            }
+
+            esData.push(data);
+        }
+
+        return esData;
+    }
+
+    private async scanElastiCache(): Promise<ElastiCacheData[]> {
+
+        const ecClient = new ElastiCacheClient({});
+
+        const describeCacheClustersCommand = new DescribeCacheClustersCommand({});
+        const ecList = await ecClient.send(describeCacheClustersCommand);
+
+        const ecData: ElastiCacheData[] = [];
+
+        for(const cluster of ecList.CacheClusters || []) {
+
+            const listTagsCommand = new ListTagsForResourceCommand({ ResourceName: cluster.ARN })
+            const tags = await ecClient.send(listTagsCommand);
+
+            const data: ElastiCacheData = { 
+                name: cluster.CacheClusterId as string,
+                identifier: cluster.ARN as string,
+                engine: cluster.Engine as CACHE_ENGINE,
+                rawData: {
+                    ...cluster,
+                    TagList: tags.TagList
+                }
+            }
+
+            const moduleName = tags.TagList?.find(item => item.Key === 'TerraformModuleSource');
+            const moduleVersion = tags.TagList?.find(item => item.Key === 'TerraformModuleVersion');
+
+            if(moduleName) {
+                data.moduleName = moduleName.Value;
+            }
+            if(moduleVersion) {
+                data.moduleVersion = moduleVersion.Value;
+            }
+
+            ecData.push(data);
+        }
+
+        return ecData;
     }
 }
 

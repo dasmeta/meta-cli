@@ -167,7 +167,7 @@ export default class Scan extends Command {
     let iterator = 0;
     for(const component of scannedComponents) {
 
-      log(`--- Component "${component.identifier}" ---`);
+      log(`--- Component "${component.name}" ---`);
 
       // find module
       let moduleId = component.type;

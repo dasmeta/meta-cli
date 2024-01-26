@@ -1,5 +1,7 @@
 export enum PROVIDER {
     AWS = 'Amazon Web Services',
+    AZURE = 'Azure',
+    GCP = 'Google Cloud Platform',
     KUBERNETES = 'Kubernetes',
 }
 
@@ -18,14 +20,26 @@ export enum GIT_PROVIDER {
 export enum UNKNOWN_MODULE {
     APPLICATION = 74,
     POSTGRES = 73,
+    MYSQL = 93,
     CRONJOB = 75,
     S3 = 76,
     MARIADB = 77,
+    POSTGRES_GCP = 91,
+    MYSQL_GCP = 92,
+    GCS = 90,
+    SQS = 95,
+    ES_AWS = 96,
+    REDIS_AWS = 97
 }
 
 export enum DB_ENGINE {
     POSTGRES = 'postgres',
+    MYSQL = 'mysql',
     MARIADB = 'mariadb'
+}
+
+export enum CACHE_ENGINE {
+    REDIS = 'redis'
 }
 
 export enum MODULE_TYPE {
@@ -45,13 +59,18 @@ export type Account = {
     alias: string;
     provider: PROVIDER;
     parentAccount: Account | null;
-} & Partial<AwsConfig> & Partial<KubernetesConfig>
+} & Partial<AwsConfig> & Partial<KubernetesConfig> & Partial<GcpConfig>
 
 export type AwsConfig = {
     defaultRegion: string;
     defaultRole: string;
     ssoAlias: string;
     region?: string;
+}
+
+export type GcpConfig = {
+    region?: string;
+    zone?: string;
 }
 
 export type KubernetesConfig = {
@@ -62,6 +81,8 @@ export type Environment = {[key: string]: string};
 
 export const PROVIDERMAP: {[key: number]: string} = {
     1: PROVIDER.AWS,
+    3: PROVIDER.AZURE,
+    16: PROVIDER.GCP,
     18: PROVIDER.KUBERNETES
 }
 
@@ -103,6 +124,31 @@ export type DbData = {
     name: string;
     identifier: string;
     engine: DB_ENGINE;
+    moduleName?: string;
+    moduleVersion?: string;
+    rawData: {[key: string]: any};
+}
+
+export type QueueData = {
+    name: string;
+    identifier: string;
+    moduleName?: string;
+    moduleVersion?: string;
+    rawData: {[key: string]: any};
+}
+
+export type ElasticSearchData = {
+    name: string;
+    identifier: string;
+    moduleName?: string;
+    moduleVersion?: string;
+    rawData: {[key: string]: any};
+}
+
+export type ElastiCacheData = {
+    name: string;
+    identifier: string;
+    engine: CACHE_ENGINE;
     moduleName?: string;
     moduleVersion?: string;
     rawData: {[key: string]: any};
