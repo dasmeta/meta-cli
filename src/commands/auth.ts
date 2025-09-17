@@ -1,6 +1,6 @@
 import {Command, ux} from '@oclif/core';
 import chalk from 'chalk';
-import { lowerCase } from 'lodash';
+import { toLower } from 'lodash';
 import BackendClient from '../BackendClient';
 import { setAccounts, getProvider } from '../utils';
 import { Account, PROVIDER, PROVIDERMAP } from '../types';
@@ -47,7 +47,7 @@ export default class Auth extends Command {
         }
 
         const account = {
-          name: lowerCase(item.attributes.client?.data?.attributes?.name),
+          name: toLower(item.attributes.client?.data?.attributes?.name),
           alias: item.attributes.alias,
           accountId: item.attributes.accountId,
           provider: PROVIDERMAP[item.attributes.provider?.data?.id],
@@ -60,7 +60,7 @@ export default class Auth extends Command {
 
           const parent = data.data;
           account.parentAccount = {
-            name: lowerCase(parent.attributes.client?.data?.attributes?.name),
+            name: toLower(parent.attributes.client?.data?.attributes?.name),
             alias: parent.attributes.alias,
             accountId: parent.attributes.accountId,
             provider: PROVIDERMAP[parent.attributes.provider?.data?.id],
