@@ -66,11 +66,13 @@ export type AwsConfig = {
     defaultRole: string;
     ssoAlias: string;
     region?: string;
+    regions?: Array<string>;
 }
 
 export type GcpConfig = {
     region?: string;
     zone?: string;
+    regions?: Array<string>;
 }
 
 export type KubernetesConfig = {

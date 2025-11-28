@@ -103,11 +103,33 @@ class AWSProvider implements Provider {
 
         const vaultCommandPrefix = `unset AWS_VAULT && aws-vault exec ${account.name}-${account.alias} --`;
 
-        const clustersOutput = execSync(`${vaultCommandPrefix} aws eks list-clusters --query "clusters[]" --output text`).toString().trim();
-        const clusters = clustersOutput.split('\t').filter(Boolean);
+        let regionsToCheck: string[] = [];
 
-        for(const cluster of clusters) {
-            execSync(`${vaultCommandPrefix} aws eks update-kubeconfig --region ${account.region || account.defaultRegion} --name ${cluster} --kubeconfig=${os.homedir}/.kube/${account.name}-${account.alias}-${cluster}`, { stdio: 'inherit' });
+        if (account.regions && account.regions.length > 0) {
+            regionsToCheck = account.regions;
+        } else if (account.region) {
+            regionsToCheck = [account.region];
+        } else if (account.defaultRegion) {
+            regionsToCheck = [account.defaultRegion];
+        }
+
+        const clusterRegionMap: { [clusterName: string]: string } = {};
+
+        for (const region of regionsToCheck) {
+            try {
+                const clustersOutput = execSync(`${vaultCommandPrefix} aws eks list-clusters --region ${region} --query "clusters[]" --output text`, { encoding: 'utf-8' }).toString().trim();
+                const clusters = clustersOutput.split('\t').filter(Boolean);
+                
+                for (const cluster of clusters) {
+                    clusterRegionMap[cluster] = region;
+                }
+            } catch (error) {
+                continue;
+            }
+        }
+
+        for (const [cluster, region] of Object.entries(clusterRegionMap)) {
+            execSync(`${vaultCommandPrefix} aws eks update-kubeconfig --region ${region} --name ${cluster} --kubeconfig=${os.homedir}/.kube/${account.name}-${account.alias}-${cluster}`, { stdio: 'inherit' });
         }
 
         const envOutput = execSync(`${vaultCommandPrefix} env | grep AWS`).toString().trim();
