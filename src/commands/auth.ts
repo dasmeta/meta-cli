@@ -6,6 +6,8 @@ import { setAccounts, getProvider } from '../utils';
 import { Account, PROVIDER, PROVIDERMAP } from '../types';
 
 export default class Auth extends Command {
+  static summary = 'Authenticate meta CLI with the DasMeta backend';
+
   static description = 'describe the command here'
 
   static examples = [

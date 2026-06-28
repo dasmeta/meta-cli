@@ -5,6 +5,8 @@ import { Account } from '../types';
 import { spawn } from 'child_process';
 
 export default class Exec extends Command {
+  static summary = 'Open a shell with AWS credentials for a client environment';
+
   static description = 'describe the command here'
 
   static examples = [

@@ -1,0 +1,2 @@
+source: &module_source dasmeta/empty/null
+version: &module_version 1.2.2

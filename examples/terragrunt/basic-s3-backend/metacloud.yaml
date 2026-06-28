@@ -1,0 +1,8 @@
+driver: terragrunt
+target_dir: _terragrunt
+terraform_backend:
+  name: s3
+  configs:
+    bucket: example-state-bucket
+    region: eu-central-1
+    key: terragrunt

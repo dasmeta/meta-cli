@@ -1,0 +1,7 @@
+driver: terragrunt
+target_dir: _terragrunt
+terraform_backend:
+  name: gcs
+  configs:
+    bucket: example-state-bucket
+    prefix: terragrunt

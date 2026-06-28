@@ -6,6 +6,8 @@ import { setAccounts, getProvider } from '../utils';
 import { Account, PROVIDER, PROVIDERMAP } from '../types';
 
 export default class Refresh extends Command {
+  static summary = 'Refresh cached account and environment metadata';
+
   static description = 'describe the command here'
 
   static examples = [

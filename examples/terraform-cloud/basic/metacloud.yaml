@@ -1,0 +1,6 @@
+driver: terraform-cloud
+terraform_cloud_org: dasmeta
+terraform_cloud_workspace: infrastructure
+git_provider: github
+git_org: dasmeta
+git_repo: infrastructure

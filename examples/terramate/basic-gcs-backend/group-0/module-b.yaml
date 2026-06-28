@@ -1,0 +1,5 @@
+source: *module_source
+version: *module_version
+variables:
+  first-string: ${group-0/module-a["first-string-variable"]}
+  second-bool: true

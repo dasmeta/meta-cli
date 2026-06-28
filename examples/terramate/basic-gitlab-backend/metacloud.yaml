@@ -1,0 +1,14 @@
+driver: terramate
+target_dir: _terraform
+terraform_backend:
+  name: http
+  configs:
+    address: https://gitlab.example.com/api/v4/projects/123/terraform/state
+    lock_address: https://gitlab.example.com/api/v4/projects/123/terraform/state
+    unlock_address: https://gitlab.example.com/api/v4/projects/123/terraform/state
+    lock_method: POST
+    unlock_method: DELETE
+    retry_wait_min: 5
+    username: gitlab-ci-token
+    password: replace-with-token
+linking_mode: remote_state

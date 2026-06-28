@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://unpkg.com/@dasmeta/meta-cli/schemas/metacloud/shared-anchors.schema.json",
+  "title": "MetaCloud shared YAML anchors",
+  "description": "_.yaml merge files — YAML anchors only, no workspace module definitions.",
+  "type": "object",
+  "additionalProperties": true
+}

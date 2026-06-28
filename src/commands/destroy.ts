@@ -1,0 +1,62 @@
+import { Command } from '@oclif/core';
+
+import {
+  DIR_FLAG,
+  DRIVER_FLAG,
+  SETUP_FLAG,
+  parseDriverFlag,
+} from '../driver-command-flags';
+import {
+  buildExecutionPlan,
+  executePlan,
+  resolveRequestedSetupDirs,
+  warnTerraformCloudUnsupportedAction,
+} from '../driver-runtime';
+import { resolveDriverConfig } from '../workspace-context';
+
+export default class Destroy extends Command {
+  static summary = 'Destroy generated setups via the configured driver';
+
+  static description = 'destroy generated infrastructure using the configured driver wrapper';
+
+  static examples = [
+    '<%= config.bin %> <%= command.id %>',
+    '<%= config.bin %> <%= command.id %> --setup group-2/dns-zone,group-3/dns-records',
+    '<%= config.bin %> <%= command.id %> --driver terramate',
+    '<%= config.bin %> <%= command.id %> -- --lock-timeout=5m',
+  ];
+
+  static flags = {
+    dir: DIR_FLAG,
+    driver: DRIVER_FLAG,
+    setup: SETUP_FLAG,
+  };
+
+  static strict = false;
+
+  public async run(): Promise<void> {
+    const { flags } = await this.parse(Destroy);
+    const cwd = process.cwd();
+    const config = resolveDriverConfig(cwd, {
+      driver: parseDriverFlag(flags.driver),
+      dir: flags.dir,
+    });
+
+    const passthroughIndex = this.argv.indexOf('--');
+    const extraArgs = passthroughIndex >= 0 ? this.argv.slice(passthroughIndex + 1) : [];
+    const { setupDirs } = resolveRequestedSetupDirs(config, cwd, flags.dir, flags.setup || []);
+
+    warnTerraformCloudUnsupportedAction('destroy', config);
+
+    const plan = buildExecutionPlan({
+      action: 'destroy',
+      config,
+      cwd,
+      dir: flags.dir,
+      extraArgs,
+      setupDirs,
+    });
+
+    await executePlan(plan);
+  }
+}
