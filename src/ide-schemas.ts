@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { MetaDriver } from './utils';
 
@@ -52,7 +52,7 @@ export function getBundledSchemaDir(): string {
 export function findVscodeSettingsDir(startDir: string): string {
   let dir = path.resolve(startDir);
 
-  while (true) {
+  for (;;) {
     if (fs.existsSync(path.join(dir, '.vscode'))) {
       return path.join(dir, '.vscode');
     }
@@ -115,12 +115,12 @@ export function buildYamlSchemaMappings(
     : path.join(settingsDir, 'schemas', 'metacloud');
 
   const mappings: Record<string, string | string[]> = {
-    [path.posix.join(schemaBase.replace(/\\/g, '/'), 'metacloud.schema.json')]: METACLOUD_GLOBS,
+    [path.posix.join(schemaBase.replaceAll('\\', '/'), 'metacloud.schema.json')]: METACLOUD_GLOBS,
   };
 
   if (driver === 'terramate' || driver === 'terragrunt') {
-    mappings[path.posix.join(schemaBase.replace(/\\/g, '/'), 'shared-anchors.schema.json')] = SHARED_ANCHOR_GLOBS;
-    mappings[path.posix.join(schemaBase.replace(/\\/g, '/'), 'workspace.schema.json')] = WORKSPACE_GLOBS;
+    mappings[path.posix.join(schemaBase.replaceAll('\\', '/'), 'shared-anchors.schema.json')] = SHARED_ANCHOR_GLOBS;
+    mappings[path.posix.join(schemaBase.replaceAll('\\', '/'), 'workspace.schema.json')] = WORKSPACE_GLOBS;
   }
 
   return mappings;

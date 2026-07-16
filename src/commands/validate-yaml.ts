@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 
 import { Command, Flags } from '@oclif/core';
 import chalk from 'chalk';

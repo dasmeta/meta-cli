@@ -1,8 +1,8 @@
 import ini from 'ini';
-import os from 'os';
-import fs from 'fs';
+import os from 'node:os';
+import fs from 'node:fs';
 import { omit, lowerCase } from 'lodash';
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
 import { v1 } from '@google-cloud/sql';
 import { Storage } from '@google-cloud/storage';
 
@@ -39,17 +39,17 @@ class GCPProvider implements Provider {
             fs.writeFileSync(`${os.homedir}/.config/gcloud/configurations/config_${account.name}-${account.alias}`, '')
         }
 
-        const config = ini.parse(fs.readFileSync(`${os.homedir}/.config/gcloud/configurations/config_${account.name}-${account.alias}`, 'utf-8'));
+        const config = ini.parse(fs.readFileSync(`${os.homedir}/.config/gcloud/configurations/config_${account.name}-${account.alias}`, 'utf8'));
 
         if(account.provider !== PROVIDER.GCP) {
             return;
         }
 
-        config['core'] = {
+        config.core = {
             'project': account.accountId
         }
 
-        config['compute'] = {
+        config.compute = {
             'zone': account.zone,
             'region': account.region
         }
@@ -125,8 +125,8 @@ class GCPProvider implements Provider {
 
         try {
             data = await instancesClient.list({ project });
-        } catch(e: any) {
-            console.log(e.message);
+        } catch(error: any) {
+            console.log(error.message);
         }
         
         const dbData: DbData[] = [];

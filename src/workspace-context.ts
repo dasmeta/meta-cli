@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { detectSetupDirs, DRIVER_DEFAULT_DIRS } from './driver-runtime';
 import { GIT_PROVIDER } from './types';

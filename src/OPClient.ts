@@ -1,4 +1,4 @@
-import { execSync, exec, spawn } from 'child_process';
+import {execSync, spawn} from 'node:child_process';
 
 class OPClient {
 
@@ -34,8 +34,8 @@ class OPClient {
         const sessionTokenLine = signinOutput.trim().split('\n')[0].match(/"(.+?)"/); 
         const sessionToken = sessionTokenLine ? sessionTokenLine[1] : '';
 
-        const tfToken = execSync(`op item get ${this.vault}.TFC_TOKEN --session=${sessionToken} --vault ${this.vault} --format json | jq ".fields[0].value"`).toString().replace(/\"/g, "").trim();
-        const gitToken = execSync(`op item get ${this.vault}.GIT_TOKEN --session=${sessionToken} --vault ${this.vault} --format json | jq ".fields[0].value"`).toString().replace(/\"/g, "").trim();
+        const tfToken = execSync(`op item get ${this.vault}.TFC_TOKEN --session=${sessionToken} --vault ${this.vault} --format json | jq ".fields[0].value"`).toString().replaceAll('"', "").trim();
+        const gitToken = execSync(`op item get ${this.vault}.GIT_TOKEN --session=${sessionToken} --vault ${this.vault} --format json | jq ".fields[0].value"`).toString().replaceAll('"', "").trim();
         return {
           tfToken,
           gitToken

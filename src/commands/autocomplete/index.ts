@@ -1,5 +1,5 @@
 import {Args, ux, Flags} from '@oclif/core'
-import {EOL} from 'os'
+import {EOL} from 'node:os'
 import chalk from 'chalk'
 
 import {AutocompleteBase} from '../../autocomplete/base'
@@ -8,14 +8,21 @@ import Create from './create'
 
 const noteFromShell = (shell: string) => {
   switch (shell) {
-  case 'zsh':
+  case 'zsh': {
     return `After sourcing, you can run \`${chalk.cyan('$ compaudit -D')}\` to ensure no permissions conflicts are present`
-  case 'bash':
+  }
+
+  case 'bash': {
     return  'If your terminal starts as a login shell you may need to print the init script into ~/.bash_profile or ~/.profile.'
-  case 'powershell':
+  }
+
+  case 'powershell': {
     return `Use the \`MenuComplete\` mode to get matching completions printed below the command line:\n${chalk.cyan('Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete')}`
-  default:
+  }
+
+  default: {
     return ''
+  }
   }
 }
 
@@ -58,7 +65,7 @@ export default class Index extends AutocompleteBase {
     ux.action.stop()
 
     if (!flags['refresh-cache']) {
-      const bin = this.config.bin
+      const {bin} = this.config
       const tabStr = shell === 'bash' ? '<TAB><TAB>' : '<TAB>'
 
       const instructions = shell === 'powershell' ?

@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { expect } from 'chai';
 import { parse } from 'yaml';
@@ -155,13 +155,13 @@ describe('examples', () => {
 
     it(`keeps ${driver}/${variant} metacloud.yaml in sync with buildMetaCloudConfigContent`, () => {
       const expected = buildMetaCloudConfigContent(config);
-      const actual = fs.readFileSync(path.join(exampleDir, 'metacloud.yaml'), 'utf-8');
+      const actual = fs.readFileSync(path.join(exampleDir, 'metacloud.yaml'), 'utf8');
 
       expect(actual).to.equal(expected);
     });
 
     it(`parses ${driver}/${variant} metacloud.yaml into MetaConfig`, () => {
-      const yaml = fs.readFileSync(path.join(exampleDir, 'metacloud.yaml'), 'utf-8');
+      const yaml = fs.readFileSync(path.join(exampleDir, 'metacloud.yaml'), 'utf8');
       const parsed = normalizeMetaCloudConfig(parse(yaml) as {[key: string]: unknown});
 
       expect(parsed.driver || 'terraform-cloud').to.equal(config.driver || 'terraform-cloud');
@@ -172,6 +172,7 @@ describe('examples', () => {
         expect(parsed.gitOrg).to.be.undefined;
         expect(parsed.gitRepo).to.be.undefined;
       }
+
       expect(parsed.yamlDir).to.be.undefined;
     });
   }
@@ -179,7 +180,7 @@ describe('examples', () => {
   it('includes multi-group linked modules in terramate basic-s3-backend example', () => {
     const moduleC = fs.readFileSync(
       path.join(examplesDir, 'terramate', 'basic-s3-backend', 'group-1', 'module-c.yaml'),
-      'utf-8',
+      'utf8',
     );
 
     expect(moduleC).to.contain('${group-0/module-a["first-string-variable"]}');
@@ -189,7 +190,7 @@ describe('examples', () => {
   it('includes multi-group linked modules in terragrunt basic-s3-backend example', () => {
     const moduleC = fs.readFileSync(
       path.join(examplesDir, 'terragrunt', 'basic-s3-backend', 'group-1', 'module-c.yaml'),
-      'utf-8',
+      'utf8',
     );
 
     expect(moduleC).to.contain('linked_workspaces:');

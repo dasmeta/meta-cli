@@ -1,4 +1,4 @@
-import util from 'util'
+import util from 'node:util'
 import {Config, Interfaces, Command} from '@oclif/core'
 import ejs from 'ejs'
 
@@ -43,10 +43,11 @@ export default class ZshCompWithSpaces {
     if (summary === undefined) {
       return ''
     }
+
     return ejs.render(summary, {config: this.config})
-    .replace(/([`"])/g, '\\\\\\$1') // backticks and double-quotes require triple-backslashes
-    // eslint-disable-next-line no-useless-escape
-    .replace(/([\[\]])/g, '\\\\$1') // square brackets require double-backslashes
+    .replaceAll(/(["`])/g, '\\\\\\$1') // backticks and double-quotes require triple-backslashes
+     
+    .replaceAll(/([[\]])/g, '\\\\$1') // square brackets require double-backslashes
     .split('\n')[0] // only use the first line
   }
 
@@ -78,7 +79,7 @@ export default class ZshCompWithSpaces {
 
           if (cmd) {
             // if it's a command and has dynamic args, redirect to its completion function.
-            // @ts-ignore
+            // @ts-expect-error private oclif API
             const pureCommand = this.config._commands.get(arg.id);
             if(pureCommand?.autocompleteArgs?.length > 0) {
               caseBlock += `${arg.id})\n  _${this.config.bin}_${arg.id}\n  ;;\n`
@@ -102,7 +103,7 @@ export default class ZshCompWithSpaces {
 
     const genArgsCompBlock = (command: CommandCompletion) => {
 
-      // @ts-ignore
+      // @ts-expect-error private oclif API
       const cmd = this.config._commands.get(command.id);
 
       if(!cmd?.autocompleteArgs?.length) {
@@ -213,11 +214,7 @@ _${this.config.bin}
 
           flagSpec += `"[${flagSummary}]`
 
-          if (f.options) {
-            flagSpec += `:${f.name} options:(${f.options?.join(' ')})"`
-          } else {
-            flagSpec += ':file:_files"'
-          }
+          flagSpec += f.options ? `:${f.name} options:(${f.options?.join(' ')})"` : ':file:_files"';
         } else {
           if (f.multiple) {
             // this flag can be present multiple times on the line
@@ -226,11 +223,7 @@ _${this.config.bin}
 
           flagSpec += `--${f.name}"[${flagSummary}]:`
 
-          if (f.options) {
-            flagSpec += `${f.name} options:(${f.options.join(' ')})"`
-          } else {
-            flagSpec += 'file:_files"'
-          }
+          flagSpec += f.options ? `${f.name} options:(${f.options.join(' ')})"` : 'file:_files"';
         }
       } else if (f.char) {
         // Flag.Boolean
@@ -243,6 +236,7 @@ _${this.config.bin}
       flagSpec += ' \\\n'
       argumentsBlock += flagSpec
     }
+
     // add global `--help` flag
     argumentsBlock += '--help"[Show help for command]" \\\n'
     // complete files if `-` is not present on the current line
@@ -274,7 +268,7 @@ _${this.config.bin}
 
     const flagArgsTemplate = '        "%s")\n          %s\n        ;;\n'
 
-    const underscoreSepId = id.replace(/:/g, '_')
+    const underscoreSepId = id.replaceAll(':', '_')
     const depth = id.split(':').length
 
     const isCotopic = coTopics.includes(id)
@@ -348,6 +342,7 @@ _${this.config.bin}
 
       return util.format(coTopicCompFunc, this.genZshValuesBlock(subArgs), argsBlock)
     }
+
     let argsBlock = ''
 
     const subArgs: {id: string; summary?: string}[] = []
@@ -428,13 +423,15 @@ _${this.config.bin}
       if (a.name < b.name) {
         return -1
       }
+
       if (a.name > b.name) {
         return 1
       }
+
       return 0
     })
     .map(t => {
-      const description = t.description ? this.sanitizeSummary(t.description) : `${t.name.replace(/:/g, ' ')} commands`
+      const description = t.description ? this.sanitizeSummary(t.description) : `${t.name.replaceAll(':', ' ')} commands`
 
       return {
         name: t.name,
@@ -453,8 +450,8 @@ _${this.config.bin}
       p.commands.forEach(c => {
         if (c.hidden) return
         const summary = this.sanitizeSummary(c.summary || c.description)
-        const flags = c.flags
-        const args = c.args
+        const {flags} = c
+        const {args} = c
         cmds.push({
           id: c.id,
           summary,
@@ -483,9 +480,10 @@ _${this.config.bin}
             if (!this.topics.find(t => t.name === topic)) {
               this.topics.push({
                 name: topic,
-                description: `${topic.replace(/:/g, ' ')} commands`,
+                description: `${topic.replaceAll(':', ' ')} commands`,
               })
             }
+
             topic += `:${split[i + 1]}`
           }
         })

@@ -12,17 +12,15 @@ const fixRegex = (query: any): any => {
   const queryObj = cloneDeep(query);
 
   if (queryObj !== null && typeof queryObj === 'object') {
-    for (let key in queryObj) {
-        if (queryObj.hasOwnProperty(key)) {
-            // If the property is an object, recursively call the function
-            if (typeof queryObj[key] === 'object') {
+    for (const key of Object.keys(queryObj)) {
+        // If the property is an object, recursively call the function
+        if (typeof queryObj[key] === 'object') {
               queryObj[key] = fixRegex(queryObj[key]);
             }
-        }
     }
 
-    if ('$regex' in queryObj && ('$options' in queryObj || queryObj['$options'] === undefined)) {
-        return new RegExp(queryObj['$regex'], queryObj['$options'] || '');
+    if ('$regex' in queryObj && ('$options' in queryObj || queryObj.$options === undefined)) {
+        return new RegExp(queryObj.$regex, queryObj.$options || '');
     }
   } else if (Array.isArray(queryObj)) {
       // Iterate through each element if obj is an array
@@ -42,7 +40,7 @@ const getAssociatedProject = (projectAccountData: any, component: Component) => 
       const filter = fixRegex(projectAccount.attributes.filter);
 
       const filteredData = [component.rawData].filter(sift(filter));
-      if(filteredData.length) {
+      if(filteredData.length > 0) {
           return projectAccount.attributes.project.data;
       }
   }
@@ -146,7 +144,7 @@ export default class Scan extends Command {
       },
       pagination: {
         page: 1,
-        pageSize: 10000
+        pageSize: 10_000
       },
       populate: '*' 
     });
@@ -194,7 +192,7 @@ export default class Scan extends Command {
 
       // find project
       let projectId = defaultProject.id;
-      if(projectAccountsData.data.length) {
+      if(projectAccountsData.data.length > 0) {
         const associatedProject = getAssociatedProject(projectAccountsData.data, component);
         if(associatedProject) {
           projectId = associatedProject.id;
@@ -208,7 +206,18 @@ export default class Scan extends Command {
         logAssociate(component.rawData);
       }
 
-      if(!existingServices[component.identifier]) {
+      if(existingServices[component.identifier]) {
+        await client.put(`components/${existingServices[component.identifier]}`, {
+          data: {
+            project: projectId,
+            module: moduleId,
+            module_version: moduleVersion ? moduleVersion.id : null,
+            source: COMPONENT_SOURCE.SCANNER,
+            raw_data: component.rawData,
+            archived: false
+          }
+        })
+      } else {
 
         await client.post('components', {
           data: {
@@ -232,29 +241,19 @@ export default class Scan extends Command {
           }
         });
         iterator++
-      } else {
-        await client.put(`components/${existingServices[component.identifier]}`, {
-          data: {
-            project: projectId,
-            module: moduleId,
-            module_version: moduleVersion ? moduleVersion.id : null,
-            source: COMPONENT_SOURCE.SCANNER,
-            raw_data: component.rawData,
-            archived: false
-          }
-        })
       }
+
       delete existingServices[component.identifier];
 
       log('Done.', 'success');
     }
 
-    if(Object.keys(existingServices).length) {
+    if(Object.keys(existingServices).length > 0) {
       log(`Found ${Object.keys(existingServices).length} stale components.`);
       log('Archiving...');
     }
 
-    for(const key in existingServices) {
+    for (const key of Object.keys(existingServices)) {
       await client.put(`components/${existingServices[key]}`, {
         data: {
           archived: true

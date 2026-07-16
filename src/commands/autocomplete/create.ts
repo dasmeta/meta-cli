@@ -1,5 +1,5 @@
-import path from 'path'
-import {mkdir, writeFile} from 'fs/promises'
+import path from 'node:path'
+import {mkdir, writeFile} from 'node:fs/promises'
 import bashAutocomplete from '../../autocomplete/bash'
 import ZshCompWithSpaces from '../../autocomplete/zsh'
 import PowerShellComp from '../../autocomplete/powershell'
@@ -19,10 +19,11 @@ function sanitizeDescription(description?: string): string {
   if (description === undefined) {
     return ''
   }
+
   return description
-  .replace(/([`"])/g, '\\\\\\$1') // backticks and double-quotes require triple-backslashes
-  // eslint-disable-next-line no-useless-escape
-  .replace(/([\[\]])/g, '\\\\$1') // square brackets require double-backslashes
+  .replaceAll(/(["`])/g, '\\\\\\$1') // backticks and double-quotes require triple-backslashes
+   
+  .replaceAll(/([[\]])/g, '\\\\$1') // square brackets require double-backslashes
   .split('\n')[0] // only use the first line
 }
 
@@ -127,7 +128,7 @@ compinit;\n`
   private get commands(): CommandCompletion[] {
     if (this._commands) return this._commands
 
-    const plugins = this.config.plugins
+    const {plugins} = this.config
     const cmds: CommandCompletion[] = []
 
     plugins.forEach(p => {
@@ -135,8 +136,8 @@ compinit;\n`
         try {
           if (c.hidden) return
           const description = sanitizeDescription(c.summary || c.description || '')
-          const flags = c.flags
-          const args = c.args
+          const {flags} = c
+          const {args} = c
           cmds.push({
             id: c.id,
             description,
@@ -182,9 +183,7 @@ compinit;\n`
 
   /* eslint-disable no-useless-escape */
   private get genAllCommandsMetaString(): string {
-    return this.commands.map(c => {
-      return `\"${c.id.replace(/:/g, '\\:')}:${c.description}\"`
-    }).join('\n')
+    return this.commands.map(c => `\"${c.id.replaceAll(':', '\\:')}:${c.description}\"`).join('\n')
   }
   /* eslint-enable no-useless-escape */
 
@@ -195,13 +194,11 @@ compinit;\n`
     //   "--value=-[value descr]:"
     //   )
     // ;;
-    return this.commands.map(c => {
-      return `${c.id})
+    return this.commands.map(c => `${c.id})
   _command_flags=(
     ${this.genZshFlagSpecs(c)}
   )
-;;\n`
-    }).join('\n')
+;;\n`).join('\n')
   }
 
   private genCmdPublicFlags(Command: CommandCompletion): string {
@@ -220,17 +217,17 @@ compinit;\n`
   }
 
   private get bashCompletionFunction(): string {
-    const cliBin = this.cliBin
+    const {cliBin} = this
     const supportSpaces = this.config.topicSeparator === ' '
     const bashScript = (process.env.OCLIF_AUTOCOMPLETE_TOPIC_SEPARATOR === 'colon' || !supportSpaces) ? bashAutocomplete : bashAutocompleteWithSpaces
     return bashScript
     .concat(...(this.config.binAliases?.map(alias => `complete -F _<CLI_BIN>_autocomplete ${alias}`).join('\n') ?? []))
-    .replace(/<CLI_BIN>/g, cliBin)
-    .replace(/<BASH_COMMANDS_WITH_FLAGS_LIST>/g, this.bashCommandsWithFlagsList)
+    .replaceAll('<CLI_BIN>', cliBin)
+    .replaceAll('<BASH_COMMANDS_WITH_FLAGS_LIST>', this.bashCommandsWithFlagsList)
   }
 
   private get zshCompletionFunction(): string {
-    const cliBin = this.cliBin
+    const {cliBin} = this
     const allCommandsMeta = this.genAllCommandsMetaString
     const caseStatementForFlagsMeta = this.genCaseStatementForFlagsMetaString
 

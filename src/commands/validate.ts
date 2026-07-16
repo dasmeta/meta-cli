@@ -1,4 +1,4 @@
-import { Command, Flags } from '@oclif/core';
+import {Command} from '@oclif/core';
 
 import {
   DIR_FLAG,

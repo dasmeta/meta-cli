@@ -1,11 +1,11 @@
-import { spawn } from 'child_process';
+import { spawn } from 'node:child_process';
 
 import chalk from 'chalk';
 
 import { formatCommandInvocation } from './driver-runtime';
 import {
   assertTerraformWorkspace,
-  META_CLOUD_TF,
+  
 } from './workspace-context';
 
 export type TerraformWorkspaceAction = 'init' | 'plan' | 'apply' | 'destroy';
@@ -80,8 +80,10 @@ async function runTerraformWorkspace(input: {
 }
 
 export {
-  META_CLOUD_TF,
-  assertTerraformWorkspace,
+  
+  
   collectTerraformPassthroughArgs,
   runTerraformWorkspace,
 };
+
+export {META_CLOUD_TF, assertTerraformWorkspace} from './workspace-context';

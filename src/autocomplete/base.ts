@@ -1,6 +1,6 @@
-import {Command, Config} from '@oclif/core'
-import {openSync, writeSync, mkdirSync} from 'fs'
-import path from 'path'
+import {Command} from '@oclif/core'
+import {openSync, writeSync, mkdirSync} from 'node:fs'
+import path from 'node:path'
 
 export abstract class AutocompleteBase extends Command {
   public get cliBin() {
@@ -8,7 +8,7 @@ export abstract class AutocompleteBase extends Command {
   }
 
   public get cliBinEnvVar() {
-    return this.config.bin.toUpperCase().replace(/-/g, '_')
+    return this.config.bin.toUpperCase().replaceAll('-', '_')
   }
 
   public determineShell(shell: string) {

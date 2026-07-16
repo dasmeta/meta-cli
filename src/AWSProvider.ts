@@ -1,7 +1,7 @@
 import ini from 'ini';
-import os from 'os';
-import fs from 'fs';
-import { execSync } from 'child_process';
+import os from 'node:os';
+import fs from 'node:fs';
+import { execSync } from 'node:child_process';
 
 import {
     RDSClient,
@@ -73,7 +73,7 @@ class AWSProvider implements Provider {
             fs.writeFileSync(`${os.homedir}/.aws/config`, '')
         }
 
-        const config = ini.parse(fs.readFileSync(`${os.homedir}/.aws/config`, 'utf-8'));
+        const config = ini.parse(fs.readFileSync(`${os.homedir}/.aws/config`, 'utf8'));
 
         if(account.provider !== PROVIDER.AWS) {
             return;
@@ -123,7 +123,7 @@ class AWSProvider implements Provider {
                 for (const cluster of clusters) {
                     clusterRegionMap[cluster] = region;
                 }
-            } catch (error) {
+            } catch {
                 continue;
             }
         }
@@ -136,10 +136,11 @@ class AWSProvider implements Provider {
         const env = envOutput.split('\n').reduce((acc: any, item) => {
             const indexOfEquals = item.indexOf('=');
             if (indexOfEquals !== -1) {
-                const key = item.substring(0, indexOfEquals);
-                const value = item.substring(indexOfEquals + 1);
+                const key = item.slice(0, Math.max(0, indexOfEquals));
+                const value = item.slice(Math.max(0, indexOfEquals + 1));
                 acc[key] = value;
             }
+
             return acc;
         }, {});
 
@@ -151,10 +152,11 @@ class AWSProvider implements Provider {
         return output.split('\n').reduce((acc: any, item) => {
             const indexOfEquals = item.indexOf('=');
             if (indexOfEquals !== -1) {
-                const key = item.substring(0, indexOfEquals);
-                const value = item.substring(indexOfEquals + 1);
+                const key = item.slice(0, Math.max(0, indexOfEquals));
+                const value = item.slice(Math.max(0, indexOfEquals + 1));
                 acc[key] = value;
             }
+
             return acc;
         }, {});
     }
@@ -234,6 +236,7 @@ class AWSProvider implements Provider {
             if(moduleName) {
                 data.moduleName = moduleName.Value;
             }
+
             if(moduleVersion) {
                 data.moduleVersion = moduleVersion.Value;
             }
@@ -271,6 +274,7 @@ class AWSProvider implements Provider {
             if(moduleName) {
                 data.moduleName = moduleName.Value;
             }
+
             if(moduleVersion) {
                 data.moduleVersion = moduleVersion.Value;
             }
@@ -351,6 +355,7 @@ class AWSProvider implements Provider {
             if(moduleName) {
                 data.moduleName = moduleName.Value;
             }
+
             if(moduleVersion) {
                 data.moduleVersion = moduleVersion.Value;
             }
@@ -391,6 +396,7 @@ class AWSProvider implements Provider {
             if(moduleName) {
                 data.moduleName = moduleName.Value;
             }
+
             if(moduleVersion) {
                 data.moduleVersion = moduleVersion.Value;
             }

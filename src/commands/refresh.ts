@@ -1,4 +1,4 @@
-import {Command, ux} from '@oclif/core';
+import {Command} from '@oclif/core';
 import chalk from 'chalk';
 import { toLower } from 'lodash';
 import BackendClient from '../BackendClient';
@@ -48,7 +48,7 @@ export default class Refresh extends Command {
         alias: item.attributes.alias,
         accountId: item.attributes.accountId,
         provider: PROVIDERMAP[item.attributes.provider?.data?.id],
-        ...(item.attributes.config || {}),
+        ...item.attributes.config,
       }
 
       if(item.attributes.parent_account?.data) {
@@ -62,13 +62,15 @@ export default class Refresh extends Command {
           accountId: parent.attributes.accountId,
           provider: PROVIDERMAP[parent.attributes.provider?.data?.id],
           parentAccount: null,
-          ...(parent.attributes.config || {}),
+          ...parent.attributes.config,
         }
       }
       
       getProvider(PROVIDERMAP[item.attributes.provider?.data?.id] as PROVIDER).generateConfig(account);
       accounts.push(account);
-    };
+    }
+
+;
 
     setAccounts(accounts);
   }

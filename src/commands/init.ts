@@ -1,6 +1,6 @@
 import {Command, Flags, ux} from '@oclif/core';
-import { spawn } from 'child_process';
-import fs from 'fs';
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 
@@ -54,7 +54,7 @@ export default class Init extends Command {
       choices: [{ name: 'github' }, { name: 'gitlab' }, { name: 'bitbucket' }],
     }]);
 
-    return provider['provider'] as GIT_PROVIDER;
+    return provider.provider as GIT_PROVIDER;
   }
 
   private async promptTerraformBackend(driver: MetaDriver, defaultRegion?: string): Promise<TerraformBackendConfig> {
@@ -66,7 +66,7 @@ export default class Init extends Command {
       default: 's3',
     }]);
 
-    if (backend['name'] === 'local') {
+    if (backend.name === 'local') {
       const path = await ux.prompt('Local backend path', {
         default: driver === 'terramate' ? '.terraform-state' : '.terragrunt-state',
       });
@@ -214,7 +214,7 @@ export default class Init extends Command {
 
     const {flags} = await this.parse(Init)
 
-    const existingConfig = fs.existsSync('metacloud.yaml') && !flags['force']
+    const existingConfig = fs.existsSync('metacloud.yaml') && !flags.force
       ? getMetaCloudConfig() as MetaConfig
       : null;
 
@@ -230,8 +230,8 @@ export default class Init extends Command {
       return;
     }
 
-    if (flags['driver'] && fs.existsSync('metacloud.yaml') && !flags['force']) {
-      this.log(chalk.yellow(`Ignoring --driver ${flags['driver']}; metacloud.yaml already defines the driver.`));
+    if (flags.driver && fs.existsSync('metacloud.yaml') && !flags.force) {
+      this.log(chalk.yellow(`Ignoring --driver ${flags.driver}; metacloud.yaml already defines the driver.`));
     }
 
     let config: MetaConfig;
@@ -284,7 +284,7 @@ export default class Init extends Command {
       });
     }
 
-    let shell = spawn(process.env.SHELL as string, {
+    const shell = spawn(process.env.SHELL as string, {
       env: shellEnv,
       shell: true,
       stdio: 'inherit',

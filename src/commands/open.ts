@@ -39,7 +39,7 @@ export default class Open extends Command {
 
     if(args.account) {
       const accountsFound = accounts.filter(item => item.name === args.account);
-      if(!accountsFound.length) {
+      if(accountsFound.length === 0) {
         this.log(chalk.red('Wrong client \n'));
         return;
       }
