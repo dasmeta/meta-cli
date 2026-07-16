@@ -7,6 +7,10 @@ on:
   release:
     types: [created]
 
+permissions:
+  id-token: write # Required for OIDC Trusted Publishing
+  contents: read
+
 jobs:
   publish-npm:
     runs-on: ubuntu-latest
@@ -14,9 +18,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org/
-          cache: yarn
+          package-manager-cache: false
       - name: Update package.json version
         run: |
           # Extract version from tag and update package.json
@@ -26,6 +30,5 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn build
       - run: yarn test
-      - run: yarn publish --access=public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      - run: npm install -g npm@latest
+      - run: npm publish --access=public
