@@ -1,4 +1,4 @@
-import os from 'os';
+import os from 'node:os';
 import { uniqBy } from 'lodash';
 import * as k8s from '@kubernetes/client-node';
 import { Account, Component, Environment, UNKNOWN_MODULE, ClusterData } from './types';
@@ -9,7 +9,7 @@ import { getAccount } from './utils';
 
 class KubernetesProvider implements Provider {
 
-    generateConfig(account: Account): void {}
+    generateConfig(_account: Account): void {}
 
     exec(account: Account): Environment {
         return {

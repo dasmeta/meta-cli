@@ -1,6 +1,6 @@
 import { Command, Flags } from '@oclif/core';
 import chalk from 'chalk';
-import path from 'path';
+import path from 'node:path';
 
 import { bootstrapBackendFromConfig, loadMetaCloudConfigFromDir } from '../backend-bootstrap';
 import OPClient from '../OPClient';
@@ -65,9 +65,10 @@ export default class TfBootstrapBackend extends Command {
     } else {
       this.log(chalk.gray(`  backend: ${config.terraformBackend?.name}`));
     }
+
     this.log('');
 
-    let token = flags.token;
+    let {token} = flags;
     if ((driver === 'terraform-cloud') && !token && process.env.META_CLIENT_NAME) {
       try {
         ({ tfToken: token } = await new OPClient().getVariables());

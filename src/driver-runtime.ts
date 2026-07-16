@@ -1,6 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import { spawn } from 'child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { spawn } from 'node:child_process';
 
 import chalk from 'chalk';
 
@@ -251,11 +251,11 @@ function errorNeedsInitRetry(output: string): boolean {
 }
 
 function shellQuote(arg: string): string {
-  if (/^[A-Za-z0-9_@%+=:,./-]+$/.test(arg)) {
+  if (/^[\w%+,./:=@-]+$/.test(arg)) {
     return arg;
   }
 
-  return `'${arg.replace(/'/g, `'\\''`)}'`;
+  return `'${arg.replaceAll('\'', `'\\''`)}'`;
 }
 
 function formatCommandInvocation(command: CommandInvocation): string {
@@ -381,8 +381,7 @@ function buildExecutionPlan(input: {
         commands.push({
           binary: 'terragrunt',
           args: ['--working-dir', targetDir, 'run', '--all', '--', 'validate', ...extraArgs],
-        });
-        commands.push({
+        }, {
           binary: 'terragrunt',
           args: ['--working-dir', targetDir, 'run', '--all', '--', 'init', '-backend=false'],
         });
@@ -396,8 +395,7 @@ function buildExecutionPlan(input: {
         commands.push({
           binary: 'terragrunt',
           args,
-        });
-        commands.push({
+        }, {
           binary: 'terragrunt',
           args: ['--working-dir', targetDir, 'run', '--all', '--', 'init'],
         });
@@ -408,8 +406,7 @@ function buildExecutionPlan(input: {
           commands.push({
             binary: 'terragrunt',
             args: ['--working-dir', setupDir, 'validate', ...extraArgs],
-          });
-          commands.push({
+          }, {
             binary: 'terragrunt',
             args: ['--working-dir', setupDir, 'init', '-backend=false'],
           });
@@ -417,8 +414,7 @@ function buildExecutionPlan(input: {
           commands.push({
             binary: 'terragrunt',
             args: ['--working-dir', setupDir, action, ...extraArgs],
-          });
-          commands.push({
+          }, {
             binary: 'terragrunt',
             args: ['--working-dir', setupDir, 'init'],
           });
@@ -445,8 +441,7 @@ function buildExecutionPlan(input: {
       binary: 'terraform',
       args: [action === 'validate' ? 'validate' : action, ...extraArgs],
       cwd: setupDir,
-    });
-    commands.push({
+    }, {
       binary: 'terraform',
       args: action === 'validate' ? ['init', '-backend=false'] : ['init'],
       cwd: setupDir,

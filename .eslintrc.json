@@ -1,3 +1,35 @@
 {
-  "extends": ["oclif", "oclif-typescript", "prettier"]
+  "extends": ["oclif", "oclif-typescript", "prettier"],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off",
+    "camelcase": "off",
+    "import/no-named-as-default-member": "off",
+    "no-await-in-loop": "off",
+    "no-template-curly-in-string": "off",
+    "node/no-extraneous-import": "off",
+    "node/no-extraneous-require": "off",
+    "perfectionist/sort-array-includes": "off",
+    "perfectionist/sort-classes": "off",
+    "perfectionist/sort-enums": "off",
+    "perfectionist/sort-imports": "off",
+    "perfectionist/sort-interfaces": "off",
+    "perfectionist/sort-named-exports": "off",
+    "perfectionist/sort-named-imports": "off",
+    "perfectionist/sort-object-types": "off",
+    "perfectionist/sort-objects": "off",
+    "perfectionist/sort-union-types": "off",
+    "unicorn/consistent-destructuring": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/filename-case": "off",
+    "unicorn/no-array-callback-reference": "off",
+    "unicorn/no-array-for-each": "off",
+    "unicorn/no-array-push-push": "off",
+    "unicorn/no-array-reduce": "off",
+    "unicorn/prefer-array-some": "off",
+    "unicorn/prefer-module": "off",
+    "unicorn/prefer-native-coercion-functions": "off",
+    "unicorn/prefer-spread": "off",
+    "unicorn/prefer-ternary": "off",
+    "unicorn/text-encoding-identifier-case": "off"
+  }
 }

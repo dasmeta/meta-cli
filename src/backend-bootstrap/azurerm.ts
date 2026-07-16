@@ -84,19 +84,19 @@ export async function provisionAzurerm(
   const groupExistsResult = await runStep(groupExistsStep, log);
   const groupExists = groupExistsResult.stdout.trim() === 'true';
 
-  if (!groupExists) {
-    await runStep(groupCreateStep, log);
-  } else {
+  if (groupExists) {
     log(`Resource group "${input.resourceGroupName}" already exists — skipping creation.`);
+  } else {
+    await runStep(groupCreateStep, log);
   }
 
   const accountShowResult = await runStep(accountShowStep, log);
   const accountExists = accountShowResult.exitCode === 0;
 
-  if (!accountExists) {
-    await runStep(accountCreateStep, log);
-  } else {
+  if (accountExists) {
     log(`Storage account "${input.storageAccountName}" already exists — skipping creation.`);
+  } else {
+    await runStep(accountCreateStep, log);
   }
 
   const containerResult = await runStep(containerCreateStep, log);

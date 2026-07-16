@@ -12,7 +12,7 @@ async function getModuleByIdentifier(identifier: string) {
         }
     });
 
-    if(!data.data.length) {
+    if(data.data.length === 0) {
         return false;
     }
 
@@ -36,7 +36,7 @@ async function getOrCreateModuleVersion(moduleId: number, version: string) {
         }
     });
 
-    if(data.data.length) {
+    if(data.data.length > 0) {
         data.data[0];
     }
 
@@ -70,7 +70,7 @@ async function getOrCreateDefaultProject(clientId: number, clientName: string) {
         populate: '*' 
     });
 
-    if(data.data.length) {
+    if(data.data.length > 0) {
         return data.data[0];
     }
 

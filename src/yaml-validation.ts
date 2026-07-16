@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { parse } from 'yaml';
 
@@ -32,7 +32,7 @@ export type ValidateYamlResult = {
 };
 
 const YAML_PARSE_OPTIONS = { uniqueKeys: false } as const;
-const LINKED_REF_PATTERN = /\$\{([^}]+)\}/g;
+const LINKED_REF_PATTERN = /\${([^}]+)}/g;
 const SHARED_CONFIG_PATTERN = /(^|\/)_\.ya?ml$/;
 const WORKSPACE_FILE_PATTERN = /\.ya?ml$/;
 
@@ -65,6 +65,7 @@ function discoverYamlFiles(yamlDir: string): string[] {
         if (shouldSkipDirectory(entry.name)) {
           continue;
         }
+
         walk(fullPath);
         continue;
       }
@@ -73,7 +74,7 @@ function discoverYamlFiles(yamlDir: string): string[] {
         continue;
       }
 
-      const relPath = path.relative(yamlDir, fullPath).replace(/\\/g, '/');
+      const relPath = path.relative(yamlDir, fullPath).replaceAll('\\', '/');
       if (relPath.includes('.terraform')) {
         continue;
       }
@@ -162,7 +163,7 @@ function effectiveLinkedPaths(workspace: ParsedWorkspace, workspacePaths: Set<st
 }
 
 function collectLinkedReferences(value: unknown, references: Set<string>): void {
-  if (value == null) {
+  if (value === null || value === undefined) {
     return;
   }
 
@@ -170,6 +171,7 @@ function collectLinkedReferences(value: unknown, references: Set<string>): void 
     for (const match of value.matchAll(LINKED_REF_PATTERN)) {
       references.add(normalizeLinkedSetupName(match[1]));
     }
+
     return;
   }
 
@@ -177,6 +179,7 @@ function collectLinkedReferences(value: unknown, references: Set<string>): void 
     for (const item of value) {
       collectLinkedReferences(item, references);
     }
+
     return;
   }
 
@@ -188,7 +191,7 @@ function collectLinkedReferences(value: unknown, references: Set<string>): void 
 }
 
 function parseLinkedWorkspaces(raw: Record<string, unknown>): string[] {
-  const linked = raw['linked_workspaces'];
+  const linked = raw.linked_workspaces;
   if (!Array.isArray(linked)) {
     return [];
   }
@@ -219,6 +222,7 @@ function detectLinkedCycles(workspaces: ParsedWorkspace[], workspacePaths: Set<s
       if (cycleStart >= 0) {
         cycles.push([...stack.slice(cycleStart), node]);
       }
+
       return;
     }
 
@@ -294,8 +298,7 @@ function validateMetaCloudFile(metacloudPath: string): ValidationIssue[] {
     }
   }
 
-  if (driver === 'terramate' || driver === 'terragrunt') {
-    if (!config.terraformBackend?.name) {
+  if ((driver === 'terramate' || driver === 'terragrunt') && !config.terraformBackend?.name) {
       issues.push({
         severity: 'warning',
         file: metacloudPath,
@@ -303,7 +306,6 @@ function validateMetaCloudFile(metacloudPath: string): ValidationIssue[] {
         message: `${driver} driver should define terraform_backend.name in metacloud.yaml.`,
       });
     }
-  }
 
   if (driver === 'terramate' && config.linkingMode && !['remote_state', 'terramate_outputs_sharing'].includes(config.linkingMode)) {
     issues.push({
@@ -349,15 +351,15 @@ function parseWorkspaceFile(yamlDir: string, relFile: string): { workspace?: Par
     return { issues };
   }
 
-  const source = raw['source'];
-  const version = raw['version'];
-  const hasSource = source != null && source !== '';
-  const hasVersion = version != null && version !== '';
+  const {source} = raw;
+  const {version} = raw;
+  const hasSource = source !== null && source !== undefined && source !== '';
+  const hasVersion = version !== null && version !== undefined && version !== '';
   const linkedWorkspaces = parseLinkedWorkspaces(raw);
   const linkedReferences = new Set<string>();
 
-  collectLinkedReferences(raw['variables'], linkedReferences);
-  collectLinkedReferences(raw['providers'], linkedReferences);
+  collectLinkedReferences(raw.variables, linkedReferences);
+  collectLinkedReferences(raw.providers, linkedReferences);
 
   if (!hasSource && !hasVersion) {
     if (linkedWorkspaces.length > 0 || linkedReferences.size > 0) {
@@ -368,6 +370,7 @@ function parseWorkspaceFile(yamlDir: string, relFile: string): { workspace?: Par
         message: 'Linked setup references require source (and version for registry modules) after shared-config merge.',
       });
     }
+
     return { issues };
   }
 

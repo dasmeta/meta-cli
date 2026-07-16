@@ -1,5 +1,5 @@
-import util from 'util'
-import {EOL} from 'os'
+import util from 'node:util'
+import {EOL} from 'node:os'
 import {Config, Interfaces, Command} from '@oclif/core'
 import ejs from 'ejs'
 
@@ -118,10 +118,12 @@ ${flaghHashtables.join('\n')}
         for (const newKey of newKeys) {
           childNodes.push(this.genHashtable(newKey, node[key]))
         }
+
         childTpl = util.format(childTpl, childNodes.join('\n'))
 
         return util.format(leafTpl, childTpl)
       }
+
       // last node
       return util.format(leafTpl, childTpl)
     }
@@ -149,7 +151,8 @@ ${flaghHashtables.join('\n')}
         )
       }
     }
-    if (childNodes.length >= 1) {
+
+    if (childNodes.length > 0) {
       return util.format(leafTpl, childNodes.join('\n'))
     }
 
@@ -162,9 +165,10 @@ ${flaghHashtables.join('\n')}
       // [System.Management.Automation.CompletionResult] will error out if will error out if you pass in an empty string for the summary.
       return ' '
     }
+
     return ejs.render(summary, {config: this.config})
-    .replace(/"/g, '""') // escape double quotes.
-    .replace(/`/g, '``') // escape backticks.
+    .replaceAll('"', '""') // escape double quotes.
+    .replaceAll('`', '``') // escape backticks.
     .split(EOL)[0] // only use the first line
   }
 
@@ -185,16 +189,12 @@ ${flaghHashtables.join('\n')}
         ) {
           nextArgs.push(topicNameSplit[depth])
 
-          if (this.coTopics.includes(t.name)) {
-            node[topicNameSplit[depth]] = {
+          node[topicNameSplit[depth]] = this.coTopics.includes(t.name) ? {
               ...genNode(`${partialId}:${topicNameSplit[depth]}`),
-            }
-          } else {
-            node[topicNameSplit[depth]] = {
+            } : {
               _summary: t.description,
               ...genNode(`${partialId}:${topicNameSplit[depth]}`),
-            }
-          }
+            };
         }
       }
 
@@ -215,6 +215,7 @@ ${flaghHashtables.join('\n')}
           }
         }
       }
+
       return node
     }
 
@@ -225,16 +226,12 @@ ${flaghHashtables.join('\n')}
     // Collect top-level topics and generate a cmd tree node for each one of them.
     this.topics.forEach(t => {
       if (!t.name.includes(':')) {
-        if (this.coTopics.includes(t.name)) {
-          commandTree[t.name] = {
+        commandTree[t.name] = this.coTopics.includes(t.name) ? {
             ...genNode(t.name),
-          }
-        } else {
-          commandTree[t.name] = {
+          } : {
             _summary: t.description,
             ...genNode(t.name),
-          }
-        }
+          };
 
         topLevelArgs.push(t.name)
       }
@@ -404,15 +401,17 @@ Register-ArgumentCompleter -Native -CommandName ${this.config.binAliases ? `@(${
       if (a.name < b.name) {
         return -1
       }
+
       if (a.name > b.name) {
         return 1
       }
+
       return 0
     })
     .map(t => {
       const description = t.description ?
         this.sanitizeSummary(t.description) :
-        `${t.name.replace(/:/g, ' ')} commands`
+        `${t.name.replaceAll(':', ' ')} commands`
 
       return {
         name: t.name,
@@ -430,7 +429,7 @@ Register-ArgumentCompleter -Native -CommandName ${this.config.binAliases ? `@(${
       p.commands.forEach(c => {
         if (c.hidden) return
         const summary = this.sanitizeSummary(c.summary || c.description)
-        const flags = c.flags
+        const {flags} = c
         cmds.push({
           id: c.id,
           summary,
@@ -457,9 +456,10 @@ Register-ArgumentCompleter -Native -CommandName ${this.config.binAliases ? `@(${
             if (!this.topics.find(t => t.name === topic)) {
               this.topics.push({
                 name: topic,
-                description: `${topic.replace(/:/g, ' ')} commands`,
+                description: `${topic.replaceAll(':', ' ')} commands`,
               })
             }
+
             topic += `:${split[i + 1]}`
           }
         })

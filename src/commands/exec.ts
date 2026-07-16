@@ -2,7 +2,7 @@ import { Args, Command } from '@oclif/core';
 import chalk from 'chalk';
 import { getAccounts, getProvider } from '../utils';
 import { Account } from '../types';
-import { spawn } from 'child_process';
+import { spawn } from 'node:child_process';
 
 export default class Exec extends Command {
   static summary = 'Open a shell with AWS credentials for a client environment';
@@ -40,7 +40,7 @@ export default class Exec extends Command {
 
     if(args.account) {
       const clientsFound = clients.filter(item => item.name === args.account);
-      if(!clientsFound.length) {
+      if(clientsFound.length === 0) {
         this.log(chalk.red('Wrong client \n'));
         return;
       }
@@ -61,7 +61,7 @@ export default class Exec extends Command {
         const env = getProvider(environmentFound.provider).exec(environmentFound);
         allEnv = { ...allEnv, ...env };
 
-        let shell = spawn(process.env.SHELL as string, [], {
+        const shell = spawn(process.env.SHELL as string, [], {
             env: {
                 ...process.env,
                 ...allEnv,

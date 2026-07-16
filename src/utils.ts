@@ -1,6 +1,6 @@
-import os from 'os';
-import fs from 'fs';
-import path from 'path';
+import os from 'node:os';
+import fs from 'node:fs';
+import path from 'node:path';
 import { parse, stringify } from 'yaml';
 import { Provider } from './Provider';
 import { PROVIDER, GIT_PROVIDER, Account } from './types';
@@ -55,45 +55,55 @@ function metaConfigToYamlData(config: MetaConfig): {[key: string]: unknown} {
     };
 
     if (driver === 'terraform-cloud') {
-        data['terraform_cloud_org'] = config.tfCloudOrg;
-        data['terraform_cloud_workspace'] = config.tfCloudWorkspace;
+        data.terraform_cloud_org = config.tfCloudOrg;
+        data.terraform_cloud_workspace = config.tfCloudWorkspace;
         if (config.gitProvider) {
-            data['git_provider'] = config.gitProvider;
+            data.git_provider = config.gitProvider;
         }
+
         if (config.gitOrg) {
-            data['git_org'] = config.gitOrg;
+            data.git_org = config.gitOrg;
         }
+
         if (config.gitRepo) {
-            data['git_repo'] = config.gitRepo;
+            data.git_repo = config.gitRepo;
         }
     }
 
-    if (typeof config.tfAutoApply !== 'undefined') {
-        data['auto_apply'] = config.tfAutoApply;
+    if (config.tfAutoApply !== undefined) {
+        data.auto_apply = config.tfAutoApply;
     }
+
     if (config.yamlDir) {
-        data['yaml_dir'] = config.yamlDir;
+        data.yaml_dir = config.yamlDir;
     }
+
     if (config.rootDir) {
-        data['root_dir'] = config.rootDir;
+        data.root_dir = config.rootDir;
     }
+
     if (config.targetDir) {
-        data['target_dir'] = config.targetDir;
+        data.target_dir = config.targetDir;
     }
+
     if (config.handlerVersion) {
-        data['handler_version'] = config.handlerVersion;
+        data.handler_version = config.handlerVersion;
     }
+
     if (config.terraformBackend) {
-        data['terraform_backend'] = config.terraformBackend;
+        data.terraform_backend = config.terraformBackend;
     }
+
     if (config.linkingMode) {
-        data['linking_mode'] = config.linkingMode;
+        data.linking_mode = config.linkingMode;
     }
-    if (typeof config.mockInputsEnabled !== 'undefined') {
-        data['mock_inputs_enabled'] = config.mockInputsEnabled;
+
+    if (config.mockInputsEnabled !== undefined) {
+        data.mock_inputs_enabled = config.mockInputsEnabled;
     }
-    if (typeof config.stackIdPrefix !== 'undefined') {
-        data['stack_id_prefix'] = config.stackIdPrefix;
+
+    if (config.stackIdPrefix !== undefined) {
+        data.stack_id_prefix = config.stackIdPrefix;
     }
 
     return data;
@@ -101,21 +111,21 @@ function metaConfigToYamlData(config: MetaConfig): {[key: string]: unknown} {
 
 function normalizeMetaCloudConfig(data: {[key: string]: any}): MetaConfig {
     return {
-        driver: (data['driver'] || 'terraform-cloud') as MetaDriver,
-        tfCloudOrg: data['terraform_cloud_org'],
-        tfCloudWorkspace: data['terraform_cloud_workspace'],
-        gitProvider: data['git_provider'],
-        gitOrg: data['git_org'],
-        gitRepo: data['git_repo'],
-        tfAutoApply: data['auto_apply'],
-        yamlDir: data['yaml_dir'],
-        rootDir: data['root_dir'],
-        targetDir: data['target_dir'],
-        handlerVersion: data['handler_version'],
-        terraformBackend: data['terraform_backend'],
-        linkingMode: data['linking_mode'],
-        mockInputsEnabled: data['mock_inputs_enabled'],
-        stackIdPrefix: data['stack_id_prefix'],
+        driver: (data.driver || 'terraform-cloud') as MetaDriver,
+        tfCloudOrg: data.terraform_cloud_org,
+        tfCloudWorkspace: data.terraform_cloud_workspace,
+        gitProvider: data.git_provider,
+        gitOrg: data.git_org,
+        gitRepo: data.git_repo,
+        tfAutoApply: data.auto_apply,
+        yamlDir: data.yaml_dir,
+        rootDir: data.root_dir,
+        targetDir: data.target_dir,
+        handlerVersion: data.handler_version,
+        terraformBackend: data.terraform_backend,
+        linkingMode: data.linking_mode,
+        mockInputsEnabled: data.mock_inputs_enabled,
+        stackIdPrefix: data.stack_id_prefix,
     };
 }
 
@@ -170,6 +180,7 @@ function renderBackendConfig(config?: TerraformBackendConfig): string {
         for (const [key, value] of Object.entries(config.configs)) {
             lines.push(`      ${key} = ${JSON.stringify(value)}`);
         }
+
         lines.push('    }');
     }
 
@@ -219,7 +230,7 @@ module "metacloud" {
   git_repo     = var.git_repo
   git_token    = var.git_token
 
-  auto_apply   = ${typeof config.tfAutoApply !== 'undefined' ? config.tfAutoApply : true}
+  auto_apply   = ${config.tfAutoApply === undefined ? true : config.tfAutoApply}
 
   aws = {
     access_key_id     = var.access_key_id
@@ -239,7 +250,7 @@ function generateTerramateTF(config: MetaConfig): string {
 
   yamldir   = "${pathModuleDir(config.yamlDir || ".")}"
   targetdir = "${pathModuleDir(config.targetDir || "_terraform")}"
-${renderBackendConfig(config.terraformBackend)}${config.linkingMode ? `  linking_mode = "${config.linkingMode}"\n` : ''}${typeof config.mockInputsEnabled !== 'undefined' ? `  mock_inputs_enabled = ${config.mockInputsEnabled}\n` : ''}${typeof config.stackIdPrefix !== 'undefined' && config.stackIdPrefix !== null ? `  stack_id_prefix = "${config.stackIdPrefix}"\n` : ''}}`;
+${renderBackendConfig(config.terraformBackend)}${config.linkingMode ? `  linking_mode = "${config.linkingMode}"\n` : ''}${config.mockInputsEnabled === undefined ? '' : `  mock_inputs_enabled = ${config.mockInputsEnabled}\n`}${config.stackIdPrefix !== undefined && config.stackIdPrefix !== null ? `  stack_id_prefix = "${config.stackIdPrefix}"\n` : ''}}`;
 }
 
 function generateTerragruntTF(config: MetaConfig): string {
@@ -296,6 +307,7 @@ function getAccount(accountId: string): Account | false {
     if(!account) {
         return false;
     }
+
     return account;
 }
 
@@ -303,12 +315,15 @@ function getProvider(provider: PROVIDER): Provider {
     if(provider === PROVIDER.AWS) {
         return new AWSProvider();
     }
+
     if(provider === PROVIDER.KUBERNETES) {
         return new KubernetesProvider();
     }
+
     if(provider === PROVIDER.GCP) {
         return new GCPProvider();
     }
+
     if(provider === PROVIDER.AZURE) {
         return new AzureProvider();
     }
@@ -338,7 +353,7 @@ function getMetaCloudConfig(cwd: string = process.cwd()): MetaConfig|false {
         return false;
     }
 
-    const yaml = fs.readFileSync(configPath, 'utf-8');
+    const yaml = fs.readFileSync(configPath, 'utf8');
     const data = parse(yaml);
 
     return normalizeMetaCloudConfig(data);

@@ -104,16 +104,25 @@ export function resolveBootstrapTarget(
 
 export function buildBootstrapPlan(target: ResolvedBootstrapTarget): BootstrapPlan {
   switch (target.kind) {
-  case 's3':
+  case 's3': {
     return buildS3Plan(target.input);
-  case 'azurerm':
+  }
+
+  case 'azurerm': {
     return buildAzurermPlan(target.input);
-  case 'gcs':
+  }
+
+  case 'gcs': {
     return buildGcsPlan(target.input);
-  case 'terraform-cloud':
+  }
+
+  case 'terraform-cloud': {
     return buildTerraformCloudPlan(target.input);
-  default:
+  }
+
+  default: {
     throw new Error('Unsupported bootstrap target.');
+  }
   }
 }
 
@@ -138,20 +147,29 @@ export async function bootstrapBackendFromConfig(
   log('');
 
   switch (target.kind) {
-  case 's3':
+  case 's3': {
     await provisionS3(target.input, runStep, log);
     break;
-  case 'azurerm':
+  }
+
+  case 'azurerm': {
     await provisionAzurerm(target.input, runStep, log);
     break;
-  case 'gcs':
+  }
+
+  case 'gcs': {
     await provisionGcs(target.input, runStep, log);
     break;
-  case 'terraform-cloud':
+  }
+
+  case 'terraform-cloud': {
     await provisionTerraformCloud(target.input, log);
     break;
-  default:
+  }
+
+  default: {
     throw new Error('Unsupported bootstrap target.');
+  }
   }
 
   log('');

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { COMMAND_GROUPS, GROUPED_COMMAND_IDS } from '../src/command-groups';
 
