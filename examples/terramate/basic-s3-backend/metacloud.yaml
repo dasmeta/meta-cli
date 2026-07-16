@@ -1,0 +1,10 @@
+driver: terramate
+target_dir: _terraform
+terraform_backend:
+  name: s3
+  configs:
+    bucket: example-state-bucket
+    region: eu-central-1
+    key: terramate
+linking_mode: terramate_outputs_sharing
+mock_inputs_enabled: true

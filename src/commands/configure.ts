@@ -5,6 +5,8 @@ import chalk from 'chalk';
 import { setConfig } from '../utils';
 
 export default class Configure extends Command {
+  static summary = 'Configure meta CLI settings';
+
   static description = 'describe the command here'
 
   static examples = [

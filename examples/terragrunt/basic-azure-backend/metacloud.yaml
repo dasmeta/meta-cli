@@ -1,0 +1,9 @@
+driver: terragrunt
+target_dir: _terragrunt
+terraform_backend:
+  name: azurerm
+  configs:
+    resource_group_name: example-tfstate-rg
+    storage_account_name: exampletfstate
+    container_name: tfstate
+    key: terragrunt.tfstate

@@ -51,6 +51,8 @@ const getAssociatedProject = (projectAccountData: any, component: Component) => 
 }
 
 export default class Scan extends Command {
+  static summary = 'Scan cloud resources and suggest infrastructure modules';
+
   static description = 'generates metacloud.yaml and _metacloud.tf files and openes new shell with generated environment variables';
 
   static examples = [

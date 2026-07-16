@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://unpkg.com/@dasmeta/meta-cli/schemas/metacloud/workspace.schema.json",
+  "title": "MetaCloud workspace stack",
+  "description": "One YAML file defines one infrastructure stack (Terramate/Terragrunt/MetaCloud driver).",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "source": {
+      "type": "string",
+      "description": "Terraform module source path or registry address."
+    },
+    "version": {
+      "type": "string",
+      "description": "Module version constraint. Required for registry/remote sources; omit for local relative paths (./, ../, /)."
+    },
+    "variables": {
+      "type": "object",
+      "description": "Module input variables. Values may use ${linked-workspace.output} references.",
+      "additionalProperties": true
+    },
+    "variable_options": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "linked_workspaces": {
+      "type": "array",
+      "description": "Relative paths to upstream stacks (without .yaml suffix).",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "mock_inputs": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "terraform_backend": {
+      "type": "object",
+      "description": "Optional per-stack backend override. Shared settings come from metacloud.yaml.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Backend type (http, s3, local, …). Usually omitted when set in metacloud.yaml."
+        },
+        "configs": {
+          "type": "object",
+          "description": "Backend config. Omit state_key to use the auto-generated stack slug from the YAML path; set state_key only for legacy GitLab/S3 state names.",
+          "properties": {
+            "state_key": {
+              "type": "string",
+              "description": "Legacy GitLab/S3 state name override. Defaults to the Terramate stack slug derived from the YAML path."
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "sensitive": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["source"]
+}

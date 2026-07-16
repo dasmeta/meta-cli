@@ -1,0 +1,8 @@
+source: *module_source
+version: *module_version
+linked_workspaces:
+  - group-0/module-a
+  - group-0/module-b
+variables:
+  first-string: ${group-0/module-a["first-string-variable"]}
+  second-bool: ${group-0/module-b["second-bool-variable"]}

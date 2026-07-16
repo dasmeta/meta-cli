@@ -1,0 +1,8 @@
+driver: terramate
+target_dir: _terraform
+terraform_backend:
+  name: local
+  configs:
+    path: .terraform-state
+linking_mode: terramate_outputs_sharing
+mock_inputs_enabled: true

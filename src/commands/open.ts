@@ -4,6 +4,8 @@ import { getAccounts, getProvider } from '../utils';
 import { Account } from '../types';
 
 export default class Open extends Command {
+  static summary = 'Open the AWS console for a client environment';
+
   static description = 'describe the command here'
 
   static examples = [

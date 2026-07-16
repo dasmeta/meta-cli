@@ -1,0 +1,6 @@
+driver: terragrunt
+target_dir: _terragrunt
+terraform_backend:
+  name: local
+  configs:
+    path: .terragrunt-state

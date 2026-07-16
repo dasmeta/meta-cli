@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://unpkg.com/@dasmeta/meta-cli/schemas/metacloud/metacloud.schema.json",
+  "title": "MetaCloud configuration",
+  "description": "Root metacloud.yaml for meta init / meta validate.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "driver": {
+      "type": "string",
+      "enum": ["terraform-cloud", "terramate", "terragrunt"]
+    },
+    "git_provider": {
+      "type": "string",
+      "description": "VCS provider (terraform-cloud driver only)."
+    },
+    "git_org": {
+      "type": "string",
+      "description": "Git organisation (terraform-cloud driver only)."
+    },
+    "git_repo": {
+      "type": "string",
+      "description": "Git repository name (terraform-cloud driver only)."
+    },
+    "handler_version": {
+      "type": "string"
+    },
+    "yaml_dir": {
+      "type": "string"
+    },
+    "target_dir": {
+      "type": "string"
+    },
+    "linking_mode": {
+      "type": "string",
+      "enum": ["remote_state", "terramate_outputs_sharing"]
+    },
+    "mock_inputs_enabled": {
+      "type": "boolean"
+    },
+    "stack_id_prefix": {
+      "type": "string"
+    },
+    "terraform_cloud_org": {
+      "type": "string"
+    },
+    "terraform_cloud_workspace": {
+      "type": "string"
+    },
+    "terraform_backend": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "configs": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": ["name", "configs"]
+    }
+  }
+}
