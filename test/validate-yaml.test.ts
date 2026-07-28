@@ -169,6 +169,25 @@ describe('yaml validation', () => {
       expect(result.ok).to.equal(true);
       expect(result.workspaces).to.have.length(1);
     });
+
+    it('ignores non-infrastructure YAML in hidden directories', () => {
+      fs.writeFileSync(path.join(tmpDir, 'module-a.yaml'), [
+        'source: dasmeta/empty/null',
+        'version: 1.2.2',
+      ].join('\n'));
+      fs.mkdirSync(path.join(tmpDir, '.github', 'workflows'), { recursive: true });
+      fs.writeFileSync(path.join(tmpDir, '.github', 'workflows', 'dependabot.yaml'), [
+        'version: 2',
+        'updates: []',
+      ].join('\n'));
+
+      const result = validateYamlDirectory({ yamlDir: tmpDir });
+      const listed = listYamlSetups({ yamlDir: tmpDir });
+
+      expect(result.ok, result.issues.map(issue => issue.message).join('\n')).to.equal(true);
+      expect(result.workspaces.map(item => item.path)).to.deep.equal(['module-a']);
+      expect(listed.setups.map(item => item.path)).to.deep.equal(['module-a']);
+    });
   });
 
   describe('examples', () => {
