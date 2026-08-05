@@ -5,6 +5,7 @@ import path from 'node:path';
 import {
   buildYamlSchemaMappings,
   findVscodeSettingsDir,
+  isIdeYamlSchemasEnabled,
   setupIdeYamlSchemas,
 } from '../src/ide-schemas';
 
@@ -47,7 +48,7 @@ describe('ide-schemas', () => {
       const mappings = buildYamlSchemaMappings('terramate', 'remote', '1.2.3', '/tmp/.vscode');
 
       expect(Object.keys(mappings)).to.have.length(3);
-      expect(Object.keys(mappings)[0]).to.contain('unpkg.com/@dasmeta/meta-cli@1.2.3/schemas/metacloud/metacloud.schema.json');
+      expect(Object.keys(mappings)[0]).to.equal('https://unpkg.com/@dasmeta/meta-cli@1.2.3/schemas/metacloud/metacloud.schema.json');
       expect(mappings[Object.keys(mappings)[1]]).to.include('**/_.yaml');
     });
 
@@ -60,7 +61,43 @@ describe('ide-schemas', () => {
     });
   });
 
+  describe('isIdeYamlSchemasEnabled', () => {
+    it('is off unless explicitly enabled', () => {
+      expect(isIdeYamlSchemasEnabled()).to.equal(false);
+      expect(isIdeYamlSchemasEnabled({})).to.equal(false);
+      expect(isIdeYamlSchemasEnabled({ enabled: false })).to.equal(false);
+    });
+
+    it('is on when enabled by flag or config, or when a mode is requested', () => {
+      expect(isIdeYamlSchemasEnabled({ enabled: true })).to.equal(true);
+      expect(isIdeYamlSchemasEnabled({ mode: 'local' })).to.equal(true);
+    });
+
+    it('lets skip win over every opt-in', () => {
+      expect(isIdeYamlSchemasEnabled({ enabled: true, skip: true })).to.equal(false);
+      expect(isIdeYamlSchemasEnabled({ mode: 'remote', skip: true })).to.equal(false);
+    });
+  });
+
   describe('setupIdeYamlSchemas', () => {
+    it('writes nothing when not enabled', () => {
+      const repo = path.join(tempRoot, 'repo-disabled');
+      fs.mkdirSync(path.join(repo, '.git'), { recursive: true });
+
+      expect(setupIdeYamlSchemas(repo, 'terramate')).to.equal(null);
+      expect(fs.existsSync(path.join(repo, '.vscode'))).to.equal(false);
+    });
+
+    it('writes settings when enabled through config', () => {
+      const repo = path.join(tempRoot, 'repo-enabled');
+      fs.mkdirSync(path.join(repo, '.git'), { recursive: true });
+
+      const result = setupIdeYamlSchemas(repo, 'terramate', { enabled: true, mode: 'local' });
+
+      expect(result).to.not.equal(null);
+      expect(fs.existsSync(path.join(repo, '.vscode', 'settings.json'))).to.equal(true);
+    });
+
     it('merges yaml.schemas without removing unrelated settings', () => {
       const repo = path.join(tempRoot, 'repo-settings');
       const vscodeDir = path.join(repo, '.vscode');

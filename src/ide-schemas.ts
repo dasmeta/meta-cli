@@ -104,6 +104,11 @@ function removePreviousMetaCloudSchemaEntries(
   return kept;
 }
 
+// path.posix.join would collapse the "//" in https:// into a single slash
+function joinSchemaPath(base: string, file: string): string {
+  return `${base.replaceAll('\\', '/').replace(/\/+$/, '')}/${file}`;
+}
+
 export function buildYamlSchemaMappings(
   driver: MetaDriver,
   mode: IdeSchemaMode,
@@ -115,12 +120,12 @@ export function buildYamlSchemaMappings(
     : path.join(settingsDir, 'schemas', 'metacloud');
 
   const mappings: Record<string, string | string[]> = {
-    [path.posix.join(schemaBase.replaceAll('\\', '/'), 'metacloud.schema.json')]: METACLOUD_GLOBS,
+    [joinSchemaPath(schemaBase, 'metacloud.schema.json')]: METACLOUD_GLOBS,
   };
 
   if (driver === 'terramate' || driver === 'terragrunt') {
-    mappings[path.posix.join(schemaBase.replaceAll('\\', '/'), 'shared-anchors.schema.json')] = SHARED_ANCHOR_GLOBS;
-    mappings[path.posix.join(schemaBase.replaceAll('\\', '/'), 'workspace.schema.json')] = WORKSPACE_GLOBS;
+    mappings[joinSchemaPath(schemaBase, 'shared-anchors.schema.json')] = SHARED_ANCHOR_GLOBS;
+    mappings[joinSchemaPath(schemaBase, 'workspace.schema.json')] = WORKSPACE_GLOBS;
   }
 
   return mappings;
@@ -132,12 +137,32 @@ export type SetupIdeYamlSchemasResult = {
   schemaVersion: string;
 };
 
+export type IdeSchemaOptions = {
+  mode?: IdeSchemaMode;
+  skip?: boolean;
+  enabled?: boolean;
+};
+
+// IDE schema setup is opt-in: it writes .vscode/settings.json, which many repos do not track.
+export function isIdeYamlSchemasEnabled(options: IdeSchemaOptions = {}): boolean {
+  if (options.skip) {
+    return false;
+  }
+
+  if (options.enabled !== undefined) {
+    return options.enabled;
+  }
+
+  // asking for a specific mode is an explicit opt-in on its own
+  return options.mode !== undefined;
+}
+
 export function setupIdeYamlSchemas(
   cwd: string,
   driver: MetaDriver,
-  options: { mode?: IdeSchemaMode; skip?: boolean } = {},
+  options: IdeSchemaOptions = {},
 ): SetupIdeYamlSchemasResult | null {
-  if (options.skip) {
+  if (!isIdeYamlSchemasEnabled(options)) {
     return null;
   }
 

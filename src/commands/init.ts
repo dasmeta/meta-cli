@@ -34,12 +34,16 @@ export default class Init extends Command {
       description: 'Driver to generate on first run or when used with --force',
       options: ['terraform-cloud', 'terramate', 'terragrunt'],
     }),
+    'vscode-yaml-schema': Flags.boolean({
+      description: 'Write VS Code/Cursor YAML schema settings to .vscode/settings.json (off by default, can also be set with vscode_yaml_schema in metacloud.yaml)',
+      allowNo: true,
+    }),
     'skip-ide-schemas': Flags.boolean({
-      description: 'Skip VS Code/Cursor YAML schema setup in .vscode/settings.json',
+      description: 'Skip VS Code/Cursor YAML schema setup in .vscode/settings.json (kept for backward compatibility, setup is off by default)',
       default: false,
     }),
     'ide-schemas': Flags.string({
-      description: 'How to reference MetaCloud JSON schemas (remote = unpkg URL, local = copy bundled files)',
+      description: 'How to reference MetaCloud JSON schemas (remote = unpkg URL, local = copy bundled files). Implies --vscode-yaml-schema',
       options: ['remote', 'local'],
     }),
   }
@@ -175,11 +179,12 @@ export default class Init extends Command {
 
   private configureIdeSchemas(
     config: MetaConfig,
-    flags: { 'skip-ide-schemas'?: boolean; 'ide-schemas'?: string },
+    flags: { 'skip-ide-schemas'?: boolean; 'ide-schemas'?: string; 'vscode-yaml-schema'?: boolean },
   ): void {
     const result = setupIdeYamlSchemas(process.cwd(), (config.driver || 'terraform-cloud') as MetaDriver, {
       skip: flags['skip-ide-schemas'],
       mode: flags['ide-schemas'] as 'remote' | 'local' | undefined,
+      enabled: flags['vscode-yaml-schema'] ?? config.vscodeYamlSchema,
     });
 
     if (!result) {
@@ -196,7 +201,7 @@ export default class Init extends Command {
 
   private regenerateFromExistingConfig(
     config: MetaConfig,
-    flags: { force?: boolean; driver?: string; 'skip-ide-schemas'?: boolean; 'ide-schemas'?: string },
+    flags: { force?: boolean; driver?: string; 'skip-ide-schemas'?: boolean; 'ide-schemas'?: string; 'vscode-yaml-schema'?: boolean },
   ): void {
     if (flags.driver) {
       this.log(chalk.yellow(`Ignoring --driver ${flags.driver}; metacloud.yaml already defines the driver.`));
@@ -242,6 +247,10 @@ export default class Init extends Command {
     } else {
       const driver = this.resolveDriver(flags);
       config = await this.buildNewMetaConfig(driver);
+      if (flags['vscode-yaml-schema'] !== undefined) {
+        config.vscodeYamlSchema = flags['vscode-yaml-schema'];
+      }
+
       generateMetaCloudConfig(config);
     }
 
