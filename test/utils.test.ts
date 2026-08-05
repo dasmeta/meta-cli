@@ -24,6 +24,37 @@ describe('utils', () => {
       expect(config.tfCloudOrg).to.equal('dasmeta');
       expect(config.tfCloudWorkspace).to.equal('infrastructure');
       expect(config.gitProvider).to.equal('github');
+      expect(config.aws).to.equal(undefined);
+      expect(config.tfeTokenVariableSet).to.equal(undefined);
+    });
+
+    it('reads variable set settings', () => {
+      const config = normalizeMetaCloudConfig({
+        terraform_cloud_org: 'dasmeta',
+        terraform_cloud_workspace: 'infrastructure',
+        aws: { enabled: false, variable_set_name: 'aws_credentials' },
+        tfe_token_variable_set: { enabled: false, name: 'tfe-token' },
+      });
+
+      expect(config.aws).to.deep.equal({ enabled: false, variableSetName: 'aws_credentials' });
+      expect(config.tfeTokenVariableSet).to.deep.equal({ enabled: false, name: 'tfe-token' });
+    });
+
+    it('reads the vscode yaml schema opt-in', () => {
+      expect(normalizeMetaCloudConfig({ driver: 'terramate' }).vscodeYamlSchema).to.equal(undefined);
+      expect(normalizeMetaCloudConfig({ driver: 'terramate', vscode_yaml_schema: true }).vscodeYamlSchema).to.equal(true);
+      expect(normalizeMetaCloudConfig({ driver: 'terramate', vscode_yaml_schema: false }).vscodeYamlSchema).to.equal(false);
+    });
+
+    it('ignores empty variable set settings', () => {
+      const config = normalizeMetaCloudConfig({
+        terraform_cloud_org: 'dasmeta',
+        aws: null,
+        tfe_token_variable_set: {},
+      });
+
+      expect(config.aws).to.equal(undefined);
+      expect(config.tfeTokenVariableSet).to.equal(undefined);
     });
   });
 
@@ -42,6 +73,33 @@ describe('utils', () => {
       expect(content).to.contain('terraform_cloud_workspace: infrastructure');
       expect(content).to.contain('git_org: dasmeta');
       expect(content).to.not.contain('terraform_backend:');
+      expect(content).to.not.contain('aws:');
+      expect(content).to.not.contain('tfe_token_variable_set:');
+      expect(content).to.not.contain('vscode_yaml_schema:');
+    });
+
+    it('renders the vscode yaml schema opt-in when set', () => {
+      const content = buildMetaCloudConfigContent({
+        driver: 'terramate',
+        vscodeYamlSchema: true,
+      });
+
+      expect(content).to.contain('vscode_yaml_schema: true');
+    });
+
+    it('renders variable set settings', () => {
+      const content = buildMetaCloudConfigContent({
+        tfCloudOrg: 'dasmeta',
+        tfCloudWorkspace: 'infrastructure',
+        aws: { enabled: false, variableSetName: 'aws_credentials' },
+        tfeTokenVariableSet: { enabled: false, name: 'tfe-token' },
+      });
+
+      expect(content).to.contain('aws:');
+      expect(content).to.contain('enabled: false');
+      expect(content).to.contain('variable_set_name: aws_credentials');
+      expect(content).to.contain('tfe_token_variable_set:');
+      expect(content).to.contain('name: tfe-token');
     });
 
     it('renders terramate config with backend and linking settings', () => {
@@ -90,6 +148,40 @@ describe('utils', () => {
       expect(content).to.contain('rootdir   = "${path.module}/_terraform/"');
       expect(content).to.contain('targetdir = "${path.module}/_terraform"');
       expect(content).to.contain('yamldir   = "${path.module}/."');
+      expect(content).to.contain('    access_key_id     = var.access_key_id');
+      expect(content).to.not.contain('enabled');
+      expect(content).to.not.contain('tfe_token_variable_set');
+      expect(content).to.not.contain('variable_set_name');
+    });
+
+    it('renders terraform cloud module with variable sets disabled', () => {
+      const content = generateTerraformCloudTF({
+        driver: 'terraform-cloud',
+        tfCloudOrg: 'dasmeta',
+        tfCloudWorkspace: 'infrastructure',
+        gitProvider: GIT_PROVIDER.GITHUB,
+        gitOrg: 'dasmeta',
+        gitRepo: 'infra',
+        aws: { enabled: false },
+        tfeTokenVariableSet: { enabled: false },
+      });
+
+      expect(content).to.contain('  tfe_token_variable_set = {\n    enabled = false\n  }');
+      expect(content).to.contain('  aws = {\n    enabled           = false\n    access_key_id     = var.access_key_id');
+    });
+
+    it('renders terraform cloud module with custom variable set names', () => {
+      const content = generateTerraformCloudTF({
+        driver: 'terraform-cloud',
+        tfCloudOrg: 'dasmeta',
+        tfCloudWorkspace: 'infrastructure',
+        aws: { variableSetName: 'aws_credentials_shared' },
+        tfeTokenVariableSet: { name: 'tfe-token-shared' },
+      });
+
+      expect(content).to.contain('    variable_set_name = "aws_credentials_shared"');
+      expect(content).to.contain('    name    = "tfe-token-shared"');
+      expect(content).to.not.contain('enabled');
     });
 
     it('renders terramate module with backend and sharing options', () => {

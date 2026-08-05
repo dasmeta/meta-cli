@@ -135,7 +135,7 @@ First-time creation of `metacloud.yaml` (no file yet) still runs inside a shell 
 
 - `metacloud.yaml`
 - `_metacloud.tf`
-- `.vscode/settings.json` YAML schema mappings (VS Code / Cursor; see [IDE YAML schemas](#ide-yaml-schemas))
+- `.vscode/settings.json` YAML schema mappings — **opt-in**, see [IDE YAML schemas](#ide-yaml-schemas)
 
 On later runs, `meta init` reads `metacloud.yaml` and regenerates `_metacloud.tf` from it.
 
@@ -145,13 +145,22 @@ MetaCloud JSON schemas ship inside `@dasmeta/meta-cli` under `schemas/metacloud/
 
 `https://unpkg.com/@dasmeta/meta-cli@<version>/schemas/metacloud/workspace.schema.json`
 
-On every `meta init`, meta-cli merges `yaml.schemas` into the nearest `.vscode/settings.json` (walking up to the git root). By default it references the published unpkg URLs for the installed package version, so you do not need to copy schema files into your repo.
+IDE setup is **off by default** — `meta init` does not touch `.vscode/settings.json` unless you ask for it. When enabled, meta-cli merges `yaml.schemas` into the nearest `.vscode/settings.json` (walking up to the git root) and references the published unpkg URLs for the installed package version, so you do not need to copy schema files into your repo.
+
+Enable it per run:
 
 ```bash
-meta init                              # remote schemas (default after publish)
-meta init --ide-schemas local          # copy bundled schemas into .vscode/schemas/metacloud
-meta init --skip-ide-schemas           # skip IDE setup
+meta init --vscode-yaml-schema         # remote schemas from unpkg
+meta init --ide-schemas local          # implies --vscode-yaml-schema, copies bundled schemas into .vscode/schemas/metacloud
 ```
+
+Or enable it for the repo in `metacloud.yaml`:
+
+```yaml
+vscode_yaml_schema: true
+```
+
+The flag wins over the config value, so `meta init --no-vscode-yaml-schema` skips the setup for a single run. `meta init --skip-ide-schemas` still works and overrides both.
 
 Requires the [Red Hat YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) in VS Code or Cursor.
 
@@ -175,6 +184,7 @@ Driver-specific notes:
   - requires `git_provider`, `git_org`, and `git_repo` in `metacloud.yaml` (used by `dasmeta/cloud/tfe` for VCS-linked modules)
   - keeps the Terraform Cloud and 1Password token flow
   - fetches Terraform Cloud and Git tokens from 1Password
+  - optional `aws` and `tfe_token_variable_set` blocks control the variable sets `dasmeta/cloud/tfe` creates (see [Variable sets](#variable-sets))
 - `terramate`
   - **does not require `meta exec` for init** when `metacloud.yaml` exists
   - `git_*` fields are not used — omit them
@@ -205,6 +215,42 @@ terraform_cloud_workspace: infrastructure
 git_provider: github
 git_org: dasmeta
 git_repo: infrastructure
+```
+
+## Variable sets
+
+By default `dasmeta/cloud/tfe` creates an `aws_credentials` and a `tfe-token` variable set in the
+organisation. When those variable sets already exist and are managed elsewhere, `terraform apply`
+fails with `Name has already been taken`. Both are configurable from `metacloud.yaml` (terraform-cloud
+driver only):
+
+```yaml
+driver: terraform-cloud
+terraform_cloud_org: dasmeta
+terraform_cloud_workspace: infrastructure
+git_provider: github
+git_org: dasmeta
+git_repo: infrastructure
+aws:
+  enabled: false            # do not create/manage the AWS credentials variable set
+  variable_set_name: aws_credentials
+tfe_token_variable_set:
+  enabled: false            # do not create/manage the TFE token variable set
+  name: tfe-token
+```
+
+Both blocks and every key inside them are optional; omitting them keeps the previous behaviour
+(variable sets are created with their module default names). AWS credential *values* are not
+configurable here — they always come from the `meta exec` session through `var.access_key_id` and
+friends.
+
+With `aws.enabled: false` the module no longer attaches the AWS credentials variable set to generated
+workspaces. Workspaces that need those credentials should list the existing set by name in their own
+YAML instead:
+
+```yaml
+variable_sets:
+  - aws_credentials
 ```
 
 Terramate:

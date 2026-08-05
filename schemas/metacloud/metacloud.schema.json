@@ -41,6 +41,10 @@
     "stack_id_prefix": {
       "type": "string"
     },
+    "vscode_yaml_schema": {
+      "type": "boolean",
+      "description": "Set to true to let meta init write VS Code/Cursor yaml.schemas settings into .vscode/settings.json (off by default)."
+    },
     "terraform_cloud_org": {
       "type": "string"
     },
@@ -59,6 +63,36 @@
         }
       },
       "required": ["name", "configs"]
+    },
+    "aws": {
+      "type": "object",
+      "description": "AWS credentials variable set settings (terraform-cloud driver only). Credential values always come from the meta exec session.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Set to false when the AWS credentials variable set is managed outside this setup."
+        },
+        "variable_set_name": {
+          "type": "string",
+          "description": "Name of the AWS credentials variable set (module default: aws_credentials)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "tfe_token_variable_set": {
+      "type": "object",
+      "description": "TFE token variable set settings (terraform-cloud driver only).",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Set to false when the TFE token variable set is managed outside this setup."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the TFE token variable set (module default: tfe-token)."
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

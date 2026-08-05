@@ -97,6 +97,41 @@ describe('yaml validation', () => {
       expect(result.issues.some(issue => issue.code === 'unknown-linked-reference')).to.equal(true);
     });
 
+    it('warns about variable set settings on non terraform-cloud drivers', () => {
+      fs.writeFileSync(path.join(tmpDir, 'metacloud.yaml'), [
+        'driver: terragrunt',
+        'terraform_backend:',
+        '  name: local',
+        '  configs:',
+        '    path: .terragrunt-state',
+        'aws:',
+        '  enabled: false',
+      ].join('\n'));
+
+      const result = validateYamlDirectory({ yamlDir: tmpDir, metacloudPath: path.join(tmpDir, 'metacloud.yaml') });
+
+      expect(result.issues.some(issue => issue.code === 'metacloud-ignored-variable-sets')).to.equal(true);
+    });
+
+    it('accepts variable set settings on the terraform-cloud driver', () => {
+      fs.writeFileSync(path.join(tmpDir, 'metacloud.yaml'), [
+        'driver: terraform-cloud',
+        'terraform_cloud_org: dasmeta',
+        'terraform_cloud_workspace: infrastructure',
+        'git_provider: github',
+        'git_org: dasmeta',
+        'git_repo: infra',
+        'aws:',
+        '  enabled: false',
+        'tfe_token_variable_set:',
+        '  enabled: false',
+      ].join('\n'));
+
+      const result = validateYamlDirectory({ yamlDir: tmpDir, metacloudPath: path.join(tmpDir, 'metacloud.yaml') });
+
+      expect(result.issues).to.deep.equal([]);
+    });
+
     it('reports missing version for registry module sources', () => {
       fs.writeFileSync(path.join(tmpDir, 'module-a.yaml'), [
         'source: dasmeta/empty/null',

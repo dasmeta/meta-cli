@@ -296,6 +296,13 @@ function validateMetaCloudFile(metacloudPath: string): ValidationIssue[] {
         message: 'terraform-cloud driver requires terraform_cloud_org and terraform_cloud_workspace.',
       });
     }
+  } else if (config.aws || config.tfeTokenVariableSet) {
+    issues.push({
+      severity: 'warning',
+      file: metacloudPath,
+      code: 'metacloud-ignored-variable-sets',
+      message: `aws and tfe_token_variable_set are only used by the terraform-cloud driver and are ignored for ${driver}.`,
+    });
   }
 
   if ((driver === 'terramate' || driver === 'terragrunt') && !config.terraformBackend?.name) {

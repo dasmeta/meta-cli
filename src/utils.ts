@@ -39,6 +39,9 @@ export type MetaConfig = {
     linkingMode?: string;
     mockInputsEnabled?: boolean;
     stackIdPrefix?: string | null;
+    aws?: AwsConfig;
+    tfeTokenVariableSet?: TfeTokenVariableSetConfig;
+    vscodeYamlSchema?: boolean;
 }
 
 export type MetaDriver = 'terraform-cloud' | 'terramate' | 'terragrunt';
@@ -46,6 +49,54 @@ export type MetaDriver = 'terraform-cloud' | 'terramate' | 'terragrunt';
 export type TerraformBackendConfig = {
     name: string;
     configs?: {[key: string]: unknown};
+}
+
+// AWS credential values always come from the `meta exec` session (var.access_key_id and friends),
+// so only the variable set knobs are configurable through metacloud.yaml.
+export type AwsConfig = {
+    enabled?: boolean;
+    variableSetName?: string;
+}
+
+export type TfeTokenVariableSetConfig = {
+    enabled?: boolean;
+    name?: string;
+}
+
+function awsToYamlData(aws?: AwsConfig): {[key: string]: unknown} | undefined {
+    if (!aws) {
+        return undefined;
+    }
+
+    const data: {[key: string]: unknown} = {};
+
+    if (aws.enabled !== undefined) {
+        data.enabled = aws.enabled;
+    }
+
+    if (aws.variableSetName) {
+        data.variable_set_name = aws.variableSetName;
+    }
+
+    return Object.keys(data).length > 0 ? data : undefined;
+}
+
+function tfeTokenVariableSetToYamlData(variableSet?: TfeTokenVariableSetConfig): {[key: string]: unknown} | undefined {
+    if (!variableSet) {
+        return undefined;
+    }
+
+    const data: {[key: string]: unknown} = {};
+
+    if (variableSet.enabled !== undefined) {
+        data.enabled = variableSet.enabled;
+    }
+
+    if (variableSet.name) {
+        data.name = variableSet.name;
+    }
+
+    return Object.keys(data).length > 0 ? data : undefined;
 }
 
 function metaConfigToYamlData(config: MetaConfig): {[key: string]: unknown} {
@@ -67,6 +118,16 @@ function metaConfigToYamlData(config: MetaConfig): {[key: string]: unknown} {
 
         if (config.gitRepo) {
             data.git_repo = config.gitRepo;
+        }
+
+        const aws = awsToYamlData(config.aws);
+        if (aws) {
+            data.aws = aws;
+        }
+
+        const tfeTokenVariableSet = tfeTokenVariableSetToYamlData(config.tfeTokenVariableSet);
+        if (tfeTokenVariableSet) {
+            data.tfe_token_variable_set = tfeTokenVariableSet;
         }
     }
 
@@ -106,7 +167,47 @@ function metaConfigToYamlData(config: MetaConfig): {[key: string]: unknown} {
         data.stack_id_prefix = config.stackIdPrefix;
     }
 
+    if (config.vscodeYamlSchema !== undefined) {
+        data.vscode_yaml_schema = config.vscodeYamlSchema;
+    }
+
     return data;
+}
+
+function normalizeAwsConfig(data: any): AwsConfig | undefined {
+    if (!data || typeof data !== 'object') {
+        return undefined;
+    }
+
+    const config: AwsConfig = {};
+
+    if (data.enabled !== undefined) {
+        config.enabled = data.enabled;
+    }
+
+    if (data.variable_set_name !== undefined) {
+        config.variableSetName = data.variable_set_name;
+    }
+
+    return Object.keys(config).length > 0 ? config : undefined;
+}
+
+function normalizeTfeTokenVariableSetConfig(data: any): TfeTokenVariableSetConfig | undefined {
+    if (!data || typeof data !== 'object') {
+        return undefined;
+    }
+
+    const config: TfeTokenVariableSetConfig = {};
+
+    if (data.enabled !== undefined) {
+        config.enabled = data.enabled;
+    }
+
+    if (data.name !== undefined) {
+        config.name = data.name;
+    }
+
+    return Object.keys(config).length > 0 ? config : undefined;
 }
 
 function normalizeMetaCloudConfig(data: {[key: string]: any}): MetaConfig {
@@ -126,6 +227,9 @@ function normalizeMetaCloudConfig(data: {[key: string]: any}): MetaConfig {
         linkingMode: data.linking_mode,
         mockInputsEnabled: data.mock_inputs_enabled,
         stackIdPrefix: data.stack_id_prefix,
+        aws: normalizeAwsConfig(data.aws),
+        tfeTokenVariableSet: normalizeTfeTokenVariableSetConfig(data.tfe_token_variable_set),
+        vscodeYamlSchema: data.vscode_yaml_schema,
     };
 }
 
@@ -188,6 +292,50 @@ function renderBackendConfig(config?: TerraformBackendConfig): string {
     return `${lines.join('\n')}\n`;
 }
 
+function renderAwsVariableSetConfig(aws?: AwsConfig): string {
+    if (!aws) {
+        return '';
+    }
+
+    const lines = [];
+
+    if (aws.enabled !== undefined) {
+        lines.push(`    enabled           = ${aws.enabled}`);
+    }
+
+    if (aws.variableSetName) {
+        lines.push(`    variable_set_name = "${aws.variableSetName}"`);
+    }
+
+    return lines.length > 0 ? `${lines.join('\n')}\n` : '';
+}
+
+function renderTfeTokenVariableSetConfig(variableSet?: TfeTokenVariableSetConfig): string {
+    if (!variableSet) {
+        return '';
+    }
+
+    const lines = [];
+
+    if (variableSet.enabled !== undefined) {
+        lines.push(`    enabled = ${variableSet.enabled}`);
+    }
+
+    if (variableSet.name) {
+        lines.push(`    name    = "${variableSet.name}"`);
+    }
+
+    if (lines.length === 0) {
+        return '';
+    }
+
+    return `
+  tfe_token_variable_set = {
+${lines.join('\n')}
+  }
+`;
+}
+
 function generateTerraformCloudTF(config: MetaConfig): string {
     const rootDir = pathModuleDir(config.rootDir || '_terraform', true);
     const targetDir = pathModuleDir(config.targetDir || '_terraform');
@@ -231,9 +379,9 @@ module "metacloud" {
   git_token    = var.git_token
 
   auto_apply   = ${config.tfAutoApply === undefined ? true : config.tfAutoApply}
-
+${renderTfeTokenVariableSetConfig(config.tfeTokenVariableSet)}
   aws = {
-    access_key_id     = var.access_key_id
+${renderAwsVariableSetConfig(config.aws)}    access_key_id     = var.access_key_id
     secret_access_key = var.secret_access_key
     session_token     = var.session_token
     security_token    = var.security_token
