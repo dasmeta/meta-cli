@@ -22,6 +22,15 @@
       "type": "string",
       "description": "Git repository name (terraform-cloud driver only)."
     },
+    "git_branch": {
+      "type": "string",
+      "minLength": 1,
+      "description": "VCS branch used by Terraform Cloud workspaces. When omitted, the repository default branch is used."
+    },
+    "git_enabled": {
+      "type": "boolean",
+      "description": "Whether the Terraform Cloud module manages the VCS OAuth connection (default: true). Set false when VCS integration is managed externally."
+    },
     "handler_version": {
       "type": "string"
     },

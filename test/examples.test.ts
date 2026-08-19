@@ -62,7 +62,11 @@ const terraformCloudConfig: MetaConfig = {
 
 const exampleCases: Array<{ driver: string; variant: string; config: MetaConfig }> = [
   { driver: 'terraform-cloud', variant: 'basic', config: terraformCloudConfig },
-  { driver: 'terraform-cloud', variant: 'advanced', config: terraformCloudConfig },
+  {
+    driver: 'terraform-cloud',
+    variant: 'advanced',
+    config: { ...terraformCloudConfig, gitBranch: 'main', gitEnabled: false },
+  },
   {
     driver: 'terramate',
     variant: 'basic-s3-backend',
@@ -168,6 +172,8 @@ describe('examples', () => {
       if (config.driver === 'terraform-cloud') {
         expect(parsed.gitOrg).to.equal(config.gitOrg);
         expect(parsed.gitRepo).to.equal(config.gitRepo);
+        expect(parsed.gitBranch).to.equal(config.gitBranch);
+        expect(parsed.gitEnabled).to.equal(config.gitEnabled);
       } else {
         expect(parsed.gitOrg).to.be.undefined;
         expect(parsed.gitRepo).to.be.undefined;

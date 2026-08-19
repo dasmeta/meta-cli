@@ -24,8 +24,21 @@ describe('utils', () => {
       expect(config.tfCloudOrg).to.equal('dasmeta');
       expect(config.tfCloudWorkspace).to.equal('infrastructure');
       expect(config.gitProvider).to.equal('github');
+      expect(config.gitBranch).to.equal(undefined);
+      expect(config.gitEnabled).to.equal(undefined);
       expect(config.aws).to.equal(undefined);
       expect(config.tfeTokenVariableSet).to.equal(undefined);
+    });
+
+    it('reads terraform cloud git settings', () => {
+      const config = normalizeMetaCloudConfig({
+        terraform_cloud_org: 'dasmeta',
+        git_branch: 'release',
+        git_enabled: false,
+      });
+
+      expect(config.gitBranch).to.equal('release');
+      expect(config.gitEnabled).to.equal(false);
     });
 
     it('reads variable set settings', () => {
@@ -76,6 +89,23 @@ describe('utils', () => {
       expect(content).to.not.contain('aws:');
       expect(content).to.not.contain('tfe_token_variable_set:');
       expect(content).to.not.contain('vscode_yaml_schema:');
+      expect(content).to.not.contain('git_branch:');
+      expect(content).to.not.contain('git_enabled:');
+    });
+
+    it('renders terraform cloud git settings', () => {
+      const content = buildMetaCloudConfigContent({
+        tfCloudOrg: 'dasmeta',
+        tfCloudWorkspace: 'infrastructure',
+        gitProvider: GIT_PROVIDER.GITHUB,
+        gitOrg: 'dasmeta',
+        gitRepo: 'infra',
+        gitBranch: 'release',
+        gitEnabled: false,
+      });
+
+      expect(content).to.contain('git_branch: release');
+      expect(content).to.contain('git_enabled: false');
     });
 
     it('renders the vscode yaml schema opt-in when set', () => {
@@ -152,6 +182,24 @@ describe('utils', () => {
       expect(content).to.not.contain('enabled');
       expect(content).to.not.contain('tfe_token_variable_set');
       expect(content).to.not.contain('variable_set_name');
+      expect(content).to.not.contain('git_branch');
+      expect(content).to.not.contain('git_enabled');
+    });
+
+    it('passes terraform cloud git settings to the module', () => {
+      const content = generateTerraformCloudTF({
+        driver: 'terraform-cloud',
+        tfCloudOrg: 'dasmeta',
+        tfCloudWorkspace: 'infrastructure',
+        gitProvider: GIT_PROVIDER.GITHUB,
+        gitOrg: 'dasmeta',
+        gitRepo: 'infra',
+        gitBranch: 'release',
+        gitEnabled: false,
+      });
+
+      expect(content).to.contain('git_branch   = "release"');
+      expect(content).to.contain('git_enabled  = false');
     });
 
     it('renders terraform cloud module with variable sets disabled', () => {

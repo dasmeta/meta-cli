@@ -4,3 +4,5 @@ terraform_cloud_workspace: infrastructure
 git_provider: github
 git_org: dasmeta
 git_repo: infrastructure
+git_branch: main
+git_enabled: false
