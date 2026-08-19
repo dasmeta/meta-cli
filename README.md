@@ -182,6 +182,7 @@ Driver-specific notes:
 - `terraform-cloud`
   - **requires `meta exec`** before init
   - requires `git_provider`, `git_org`, and `git_repo` in `metacloud.yaml` (used by `dasmeta/cloud/tfe` for VCS-linked modules)
+  - optional `git_branch` selects a non-default repository branch; optional `git_enabled: false` disables module-managed VCS integration
   - keeps the Terraform Cloud and 1Password token flow
   - fetches Terraform Cloud and Git tokens from 1Password
   - optional `aws` and `tfe_token_variable_set` blocks control the variable sets `dasmeta/cloud/tfe` creates (see [Variable sets](#variable-sets))
@@ -215,6 +216,8 @@ terraform_cloud_workspace: infrastructure
 git_provider: github
 git_org: dasmeta
 git_repo: infrastructure
+git_branch: main            # optional; omit to use the repository default branch
+git_enabled: true           # optional; set false when VCS integration is managed externally
 ```
 
 ## Variable sets

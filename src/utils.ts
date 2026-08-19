@@ -32,6 +32,8 @@ export type MetaConfig = {
     gitProvider?: GIT_PROVIDER;
     gitOrg?: string;
     gitRepo?: string;
+    gitBranch?: string;
+    gitEnabled?: boolean;
     rootDir?: string;
     targetDir?: string;
     yamlDir?: string;
@@ -118,6 +120,14 @@ function metaConfigToYamlData(config: MetaConfig): {[key: string]: unknown} {
 
         if (config.gitRepo) {
             data.git_repo = config.gitRepo;
+        }
+
+        if (config.gitBranch) {
+            data.git_branch = config.gitBranch;
+        }
+
+        if (config.gitEnabled !== undefined) {
+            data.git_enabled = config.gitEnabled;
         }
 
         const aws = awsToYamlData(config.aws);
@@ -218,6 +228,8 @@ function normalizeMetaCloudConfig(data: {[key: string]: any}): MetaConfig {
         gitProvider: data.git_provider,
         gitOrg: data.git_org,
         gitRepo: data.git_repo,
+        gitBranch: data.git_branch,
+        gitEnabled: data.git_enabled,
         tfAutoApply: data.auto_apply,
         yamlDir: data.yaml_dir,
         rootDir: data.root_dir,
@@ -377,6 +389,9 @@ module "metacloud" {
   git_org      = var.git_org
   git_repo     = var.git_repo
   git_token    = var.git_token
+${config.gitBranch ? `  git_branch   = "${config.gitBranch}"
+` : ''}${config.gitEnabled === undefined ? '' : `  git_enabled  = ${config.gitEnabled}
+`}
 
   auto_apply   = ${config.tfAutoApply === undefined ? true : config.tfAutoApply}
 ${renderTfeTokenVariableSetConfig(config.tfeTokenVariableSet)}
