@@ -45,7 +45,10 @@ function readOptionalFile(filePath: string): string {
 }
 
 function shouldSkipDirectory(name: string): boolean {
-  return ['node_modules', '.git', '.terraform', '_terraform', '_terragrunt', 'dist'].includes(name);
+  // Infrastructure manifests are never stored in hidden directories. Ignoring
+  // them prevents repository metadata such as .github/workflows from being
+  // interpreted as workspace YAML when the repository root is validated.
+  return name.startsWith('.') || ['node_modules', '_terraform', '_terragrunt', 'dist'].includes(name);
 }
 
 function discoverYamlFiles(yamlDir: string): string[] {
